@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # For development with live reload, you might want to mount your code
+    # and override the command. Example:
+    # volumes:
+    #   - ./app:/app_code/app
+    # command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    # The current Dockerfile CMD is:
+    # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    # which is suitable for a production-like build.
+    # The env_file directive will load variables from .env into the container's environment.

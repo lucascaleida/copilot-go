@@ -1,35 +1,51 @@
 # Active Context: Database Synchronization Utility
 
-## 1. Current Work Focus (as of 2025-06-04 17:33)
+## 1. Current Work Focus (as of 2025-06-04 17:47)
 
--   **Phase:** Feature Implementation Verified.
+-   **Phase:** New Feature Development - Vehicle Search API.
 -   **Activity:**
-    -   User successfully created the `vehicles_db` database in Azure.
-    -   User re-ran the `sync_script.py`.
-    -   The script successfully connected to Azure MySQL (using SSL), used the local SQLite DB as a fallback source (as primary external DB was unavailable), and wrote 3860 rows to the `vehicles_stock` table in the Azure `vehicles_db` database.
--   **Objective:** Core task of synchronizing data to Azure MySQL, with fallback and target selection, is now working.
+    -   Received request to build a FastAPI application with Docker to expose an endpoint for querying car data from Azure MySQL.
+    -   API key: `Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6` (to be stored in `.env`).
+    -   Identified `vehicles_stock` table schema by inspecting the local SQLite DB (`mysql_to_sqlite_sync/data/local_vehicles_stock.db`).
+    -   Key queryable fields identified: `marca`, `modelo`, `color`, `tipo_transmision`, `kms`, `pvp_api`, `fecha_matriculacion` (for year), `vin`.
+    -   Started updating Memory Bank files (`projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`) to reflect this new project component.
+-   **Objective:** To create the FastAPI application, Dockerfile, `.env` file, and necessary supporting files for the vehicle search API.
 
 ## 2. Recent Changes & Decisions
 
--   **User Action Confirmation:** User created Azure DB and ran script successfully.
--   **Azure CLI Command Provided:** Previously gave the user the command to create the `vehicles_db` database.
--   **`sync_script.py` SSL Fix:** Previously modified `write_data_to_azure_mysql` for correct SSL arguments.
+-   **New Project Initiated:** Vehicle Search API.
+-   **Technology Stack for API:** FastAPI, Docker, Python, SQLAlchemy, Uvicorn.
+-   **Authentication Method:** API Key (`X-API-Key` header).
+-   **Configuration Management for API:** `.env` file for API key and database credentials (passed as environment variables to Docker).
+-   **Database Schema Source:** Leveraged existing local SQLite DB to infer schema for `vehicles_stock` on Azure.
 
 ## 3. Next Steps (Immediate)
 
-1.  **Update Memory Bank:**
-    -   Update `progress.md` to reflect the successful synchronization and completion of the main task.
-2.  **User Consideration (Optional):**
-    -   Further testing of different scenarios (e.g., primary source available, targeting local SQLite explicitly) if desired.
-    -   Monitoring the solution.
+1.  **Complete Memory Bank Update:**
+    -   Update `activeContext.md` (this file).
+    -   Update `progress.md` to reflect the start of the new API project and the status of the previous sync utility project.
+2.  **Create Project Directory:** Create a new directory for the FastAPI project (e.g., `vehicle_search_api/`).
+3.  **Create `.env` file:** Inside `vehicle_search_api/`, create `.env` with the provided API_KEY and placeholders for Azure DB credentials.
+4.  **Create `requirements.txt`:** For the FastAPI application.
+5.  **Develop FastAPI Application (`main.py`):**
+    -   Implement API key authentication.
+    -   Implement database connection logic for Azure MySQL (using credentials from env vars).
+    -   Create the `/cars/` endpoint with query parameters for make, model, year, color, etc.
+    -   Implement SQL query construction and execution.
+    -   Define Pydantic models for request and response.
+6.  **Create `Dockerfile`:** To containerize the FastAPI application.
+7.  **Create `docker-compose.yml` (Optional but Recommended):** For easier local development and running.
 
 ## 4. Active Considerations & Questions
 
--   **Azure Database Creation:** Resolved.
--   **User Permissions on Azure:** Resolved (implicitly, as the write was successful).
--   **Script Functionality:** Core requested features are now operational.
+-   **Azure DB Credentials for API:** Will use the same credentials as in `mysql_to_sqlite_sync/config.ini` for `azure_mysql_db` (host, user, password, database name, ssl_mode). These will need to be set as environment variables for the Docker container.
+-   **Specific query logic:** Keep the query simple as requested, focusing on direct matches for make, model, color, and potentially ranges for year/kms/price if straightforward.
+-   **Error Handling in API:** Ensure robust error handling for DB connection issues, invalid API keys, and bad query parameters.
 
-## 5. Important Patterns & Preferences (Reinforced)
+## 5. Important Patterns & Preferences (for new API)
 
--   **Iterative Debugging & User Collaboration:** Successfully resolved issues through collaboration.
--   **Configuration-Driven & Flexible Script:** The script's design allowed for addressing these issues and achieving the desired outcome.
+-   **Secure by Default:** API key authentication is a primary requirement.
+-   **Environment-Driven Configuration:** Align with Docker best practices.
+-   **Simplicity in Endpoint Design:** Focus on common, straightforward query parameters.
+-   **Leverage Existing Infrastructure:** Use the already populated Azure MySQL database.
+-   **Clear Documentation (Memory Bank):** Continue detailed updates.

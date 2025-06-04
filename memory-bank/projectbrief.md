@@ -31,3 +31,39 @@ The primary goal of this project is to develop a Python utility that synchronize
 - The utility creates/updates the local SQLite database with the data from the view.
 - The synchronization process is repeatable and reliable.
 - The local SQLite database accurately reflects the data from the source view after synchronization.
+
+## 5. Additional Project: Vehicle Search API (New as of 2025-06-04)
+
+### 5.1. Core Requirement
+
+Develop a FastAPI application, containerized with Docker, to expose an API endpoint for searching vehicle data stored in the Azure MySQL database (`vehicles_db`, `vehicles_stock` table). This API will be secured with an API key.
+
+### 5.2. Key Objectives
+
+-   **API Endpoint:** Create an endpoint (e.g., `/cars/`) that allows querying vehicles based on common criteria like make, model, color, year, etc.
+-   **Database Connectivity:** Connect to the Azure MySQL database to fetch data.
+-   **API Key Authentication:** Secure the endpoint using a provided API key.
+-   **Dockerization:** Package the FastAPI application into a Docker container for deployment.
+-   **Technology:** Use FastAPI, Python, Docker.
+-   **Data Source:** The `vehicles_stock` table in the `vehicles_db` Azure MySQL database.
+
+### 5.3. Scope
+
+-   **In Scope:**
+    -   FastAPI application development.
+    -   Dockerfile creation.
+    -   API endpoint for searching vehicles with basic parameters.
+    -   API key authentication mechanism.
+    -   Connection to Azure MySQL.
+    -   `.env` file for API key and potentially database credentials.
+-   **Out of Scope (initially):**
+    -   Complex search functionalities beyond typical parameters.
+    -   User interface for the API.
+    -   Deployment orchestration beyond Docker.
+
+### 5.4. Success Criteria
+
+-   The FastAPI application runs successfully in a Docker container.
+-   The `/cars/` endpoint is accessible and returns vehicle data based on query parameters.
+-   The endpoint is protected by the specified API key.
+-   The API correctly queries the Azure MySQL database.

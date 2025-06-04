@@ -62,3 +62,65 @@ mysql-connector-python
     -   `argparse` module used to process arguments like `--target` to override the default target database.
 -   **Logging:** Python's built-in `logging` module configured for detailed operational feedback to console (and potentially a file, though not explicitly configured in script yet).
 -   **Custom Exceptions:** `SourceConnectionError` used to manage control flow for source fallback.
+
+## 6. Tech Context: Vehicle Search API (New as of 2025-06-04)
+
+### 6.1. Core Technologies
+
+-   **Programming Language:** Python (version 3.8+ for FastAPI features).
+-   **API Framework:** FastAPI.
+-   **Web Server (for FastAPI):** Uvicorn.
+-   **Containerization:** Docker.
+-   **Data Validation:** Pydantic (comes with FastAPI).
+-   **Database:** Azure MySQL.
+-   **Database Interaction:**
+    -   `SQLAlchemy` (Core or ORM, potentially with `aiomysql` or `asyncmy` for async operations if chosen).
+    -   `mysql-connector-python` (if using synchronous SQLAlchemy or direct connections).
+-   **Environment Variable Management:** `python-dotenv` (for loading `.env` files).
+
+### 6.2. Development Setup
+
+-   Python environment (e.g., venv, conda).
+-   Docker Desktop or Docker Engine/CLI.
+-   Installation of Python packages (FastAPI, Uvicorn, SQLAlchemy, mysql-connector-python, python-dotenv, etc.) via `pip`.
+-   IDE or text editor (e.g., VS Code with Docker and Python extensions).
+-   Access to the Azure MySQL database (`vehicles_db`) for testing.
+-   API testing tool (e.g., Postman, curl, or FastAPI's interactive docs).
+
+### 6.3. Technical Constraints & Considerations
+
+-   **API Key Security:** The API key must be kept secret. It will be stored in an `.env` file, loaded into the Docker container's environment.
+-   **Database Credentials for API:**
+    -   Similar to the sync utility, Azure MySQL credentials (host, user, password, dbname, SSL settings) need to be securely managed. These will be passed as environment variables to the Docker container.
+    -   The `config.ini` from `mysql_to_sqlite_sync` contains these details and can serve as a reference for setting up environment variables for the API.
+-   **Azure MySQL Connectivity:**
+    -   SSL is required. The API's database connection logic must include SSL configuration (e.g., `ssl_mode='require'`).
+-   **Docker Networking:** If the API needs to be accessible outside the local machine, Docker port mapping will be necessary (e.g., `-p 8000:80`).
+-   **Scalability:** FastAPI with Uvicorn is highly performant. For further scalability, multiple Docker container instances could be run behind a load balancer.
+-   **Schema for `vehicles_stock`:** The API will query based on the schema identified:
+    -   `marca` (TEXT) - Make
+    -   `modelo` (TEXT) - Model
+    -   `color` (TEXT) - Color
+    -   `tipo_transmision` (TEXT) - Transmission
+    -   `kms` (FLOAT) - Kilometers
+    -   `pvp_api` (FLOAT) - Price
+    -   `fecha_matriculacion` (DATETIME) - For Year extraction
+    -   `vin` (TEXT) - VIN
+
+### 6.4. Key Dependencies (for the API - example `requirements.txt`)
+
+```
+fastapi
+uvicorn[standard] # Includes standard JSON parsing and server features
+sqlalchemy
+mysql-connector-python # Or an async connector like aiomysql/asyncmy if going fully async
+python-dotenv
+pydantic # Usually comes with fastapi, but good to list
+```
+
+### 6.5. Tool Usage Patterns (API)
+
+-   **`.env` File:** For storing `API_KEY` and database credentials during local development.
+-   **Docker & Dockerfile:** To define the container image, including copying application code, installing dependencies, and setting the entry point (Uvicorn).
+-   **FastAPI Interactive Docs:** (`/docs` and `/redoc`) for testing the API endpoint during development.
+-   **Environment Variables in Docker:** For passing configuration (API key, DB credentials) to the running container.
