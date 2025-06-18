@@ -108,7 +108,8 @@ async def search_cars(
     base_query = """
     SELECT ficha_id, modelo, descripcion, tipo_transmision, matricula, vin, 
            DATE_FORMAT(fecha_matriculacion, '%Y-%m-%d') as fecha_matriculacion, 
-           kms, color, pvp_api, marca 
+           kms, color, pvp_api, marca,
+           modelo_inv, marca_inv  -- Added _inv fields
     FROM vehicles_stock
     """
 
@@ -154,11 +155,23 @@ async def search_cars(
             result = connection.execute(text(base_query), query_params)
             cars_data = result.mappings().all() # Fetch all results as list of dict-like objects
             
-            # Convert RowMapping objects to dictionaries for Pydantic validation
-            # This step is crucial if orm_mode is used and data isn't directly ORM objects
-            cars_list = [dict(row) for row in cars_data]
+            processed_cars_list = []
+            for row_mapping in cars_data:
+                row_dict = dict(row_mapping)
+                
+                # Fallback logic for modelo
+                modelo_inv = row_dict.get("modelo_inv")
+                if modelo_inv is not None and str(modelo_inv).strip() != "":
+                    row_dict["modelo"] = modelo_inv
+                
+                # Fallback logic for marca
+                marca_inv = row_dict.get("marca_inv")
+                if marca_inv is not None and str(marca_inv).strip() != "":
+                    row_dict["marca"] = marca_inv
+                
+                processed_cars_list.append(row_dict)
             
-            return cars_list
+            return processed_cars_list
             
     except SQLAlchemyError as e:
         # Log the error e

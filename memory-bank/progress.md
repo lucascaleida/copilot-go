@@ -38,18 +38,23 @@
 
 ---
 
-## Project 2: Vehicle Search API (New as of 2025-06-04 17:47)
+## Project 2: Vehicle Search API (New as of 2025-06-04 17:47, Updated 2025-06-18 10:51)
 
 ### 2.1. Current Status
 
--   **Overall:** Project Initiated. Planning and Memory Bank updates are in progress.
--   **Milestone:** Requirements gathered, initial schema for `vehicles_stock` identified, Memory Bank updated to reflect the new API project.
+-   **Overall:** API development in progress. Core application structure (`main.py`) exists. Key feature for `_inv` field fallback implemented.
+-   **Milestone:** Implemented fallback logic for `marca_inv`/`modelo_inv` in API responses. Memory Bank (`activeContext.md`, `progress.md`) updated to reflect this.
 
 ### 2.2. What Works / Completed (API Project)
 
 -   **Project Definition:** Task to create FastAPI with Docker for querying Azure MySQL `vehicles_stock` table, secured by API key.
 -   **Schema Identification:** `vehicles_stock` columns identified from local SQLite DB.
--   **Memory Bank Update:** `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`, `activeContext.md`, and this `progress.md` file are being updated to include the API project.
+-   **Memory Bank Update (Initial):** `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`, `activeContext.md`, and this `progress.md` file were updated to include the API project.
+-   **`_inv` Field Fallback Logic (2025-06-18):**
+    -   Modified `vehicle_search_api/app/main.py` to select `marca_inv` and `modelo_inv`.
+    -   Implemented logic to use `_inv` field values for `marca` and `modelo` in the API response if the `_inv` fields are not empty/null, otherwise using the standard fields.
+-   **Memory Bank Update (Post-Feature):** `activeContext.md` and `progress.md` updated to reflect the `_inv` fallback implementation.
+
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
 

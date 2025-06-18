@@ -1,8 +1,13 @@
 # Active Context: Database Synchronization Utility
 
-## 1. Current Work Focus (as of 2025-06-04 17:47)
+## 1. Current Work Focus (as of 2025-06-18 10:51)
 
--   **Phase:** New Feature Development - Vehicle Search API.
+-   **Phase:** Feature Enhancement - Vehicle Search API.
+-   **Activity:** Implemented fallback logic for `_inv` fields in `vehicle_search_api/app/main.py`.
+    -   The API now prioritizes `marca_inv` and `modelo_inv` over `marca` and `modelo` respectively.
+    -   If `_inv` fields are null or empty, the API uses the standard fields.
+-   **Previous Activity (as of 2025-06-04 17:47):**
+    -   Received request to build a FastAPI application with Docker to expose an endpoint for querying car data from Azure MySQL.
 -   **Activity:**
     -   Received request to build a FastAPI application with Docker to expose an endpoint for querying car data from Azure MySQL.
     -   API key: `Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6` (to be stored in `.env`).
@@ -18,6 +23,7 @@
 -   **Authentication Method:** API Key (`X-API-Key` header).
 -   **Configuration Management for API:** `.env` file for API key and database credentials (passed as environment variables to Docker).
 -   **Database Schema Source:** Leveraged existing local SQLite DB to infer schema for `vehicles_stock` on Azure.
+-   **Implemented `_inv` Field Fallback (2025-06-18):** Modified `vehicle_search_api/app/main.py` to use `marca_inv` and `modelo_inv` as primary sources, falling back to `marca` and `modelo` if the `_inv` versions are empty or null.
 
 ## 3. Next Steps (Immediate)
 
