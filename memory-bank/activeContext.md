@@ -1,19 +1,21 @@
 # Active Context: Database Synchronization Utility
 
-## 1. Current Work Focus (as of 2025-06-18 11:54)
+## 1. Current Work Focus (as of 2025-06-18 12:20)
 
 -   **Phase:** Deployment - Vehicle Search API.
--   **Activity:** Created Azure resources and GitHub Actions workflow for CI/CD.
--   **Azure Resources Created:**
-    -   Resource Group: `concesur-rg` (Location: `West Europe`, Subscription: `f081045d-15da-466d-b4a4-9ab4cb3065a8`)
-    -   Azure Container Registry (ACR): `concesurvehicleapicr` (Login Server: `concesurvehicleapicr.azurecr.io`)
-    -   App Service Plan: `concesurvehicleapiplan` (SKU: `B1`, Linux)
-    -   App Service: `concesur-vehicle-api` (Default Hostname: `concesur-vehicle-api.azurewebsites.net`)
-    -   Service Principal: `GitHubActionsVehicleAPI` (clientId: `1e65000e-9ff7-4aba-a483-7147a528fb9c`, objectId: `87db20fd-95ee-4d9d-a7f5-401df2729c25`) with `Contributor` on subscription and `AcrPush` on ACR.
--   **GitHub Configuration:**
-    -   Secrets configured: `AZURE_CREDENTIALS`, `ACR_LOGIN_SERVER`, `APP_SERVICE_NAME`, `RESOURCE_GROUP_NAME`, `API_KEY`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE`.
-    -   Workflow file created: `.github/workflows/deploy-to-azure.yml`.
--   **Objective:** User to commit and push workflow file to trigger deployment. Monitor and verify deployment.
+-   **Activity:** Troubleshooting and updating GitHub Actions workflow for CI/CD.
+-   **Issue:** Workflow failed at ACR Login step due to missing `username` for `azure/docker-login@v1`.
+-   **Fix:** Updated `.github/workflows/deploy-to-azure.yml` to use `fromJson(secrets.AZURE_CREDENTIALS).clientId` and `fromJson(secrets.AZURE_CREDENTIALS).clientSecret` for ACR login username and password.
+-   **Azure Resources Created (Unchanged):**
+    -   Resource Group: `concesur-rg`
+    -   ACR: `concesurvehicleapicr`
+    -   App Service Plan: `concesurvehicleapiplan`
+    -   App Service: `concesur-vehicle-api`
+    -   Service Principal: `GitHubActionsVehicleAPI`.
+-   **GitHub Configuration (Unchanged):**
+    -   Secrets configured.
+    -   Workflow file `.github/workflows/deploy-to-azure.yml` updated.
+-   **Objective:** User to commit and push updated workflow file. Monitor and verify deployment.
 
 ## 2. Recent Changes & Decisions
 
@@ -28,9 +30,9 @@
 
 1.  **Update Memory Bank:**
     -   Update `activeContext.md` (this file) - Completed.
-    -   Update `progress.md` to reflect the deployment actions taken - In progress.
-2.  **User Action: Commit and Push Workflow:**
-    -   User to commit `.github/workflows/deploy-to-azure.yml` and push to `main`.
+    -   Update `progress.md` to reflect the workflow update - In progress.
+2.  **User Action: Commit and Push Updated Workflow:**
+    -   User to commit changes to `.github/workflows/deploy-to-azure.yml` and push to `main`.
 3.  **Monitor GitHub Action:**
     -   Observe the workflow run in the GitHub "Actions" tab.
     -   Troubleshoot any issues that arise during the build or deployment steps.

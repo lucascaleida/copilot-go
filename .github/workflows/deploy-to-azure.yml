@@ -31,13 +31,10 @@ jobs:
         uses: azure/docker-login@v1
         with:
           login-server: ${{ env.ACR_LOGIN_SERVER }}
-          username: ${{ secrets.ACR_USERNAME }} # For Service Principal, this is its clientId
-          password: ${{ secrets.ACR_PASSWORD }} # For Service Principal, this is its clientSecret
-        # Note: The azure/login action might configure docker to authenticate with ACR if the SP has AcrPush.
-        # If the above ACR login fails, it might be because azure/login already handled it,
-        # or we might need to adjust how ACR_USERNAME/PASSWORD are derived if not directly from AZURE_CREDENTIALS.
-        # Often, after azure/login, direct docker push to ACR works if SP has AcrPush.
-        # Let's try this first. If it fails, we can use `az acr login --name <acrname> --expose-token`
+          username: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+          password: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+        # This uses the clientId and clientSecret from the AZURE_CREDENTIALS JSON object
+        # for ACR authentication, which is the standard way when using a Service Principal.
 
       - name: Build and push Docker image
         run: |

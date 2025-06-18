@@ -38,17 +38,17 @@
 
 ---
 
-## Project 2: Vehicle Search API (New as of 2025-06-04 17:47, Updated 2025-06-18 11:54)
+## Project 2: Vehicle Search API (New as of 2025-06-04 17:47, Updated 2025-06-18 12:20)
 
 ### 2.1. Current Status
 
--   **Overall:** Azure resources created, GitHub secrets configured by user, and GitHub Actions workflow file (`deploy-to-azure.yml`) generated.
+-   **Overall:** GitHub Actions workflow (`deploy-to-azure.yml`) updated to fix ACR login issue.
 -   **Milestone:**
-    -   API development complete (including `_inv` field fallback).
-    -   Azure infrastructure (Resource Group, ACR, App Service Plan, App Service, Service Principal) provisioned.
-    -   GitHub Actions workflow for CI/CD created.
-    -   Memory Bank (`activeContext.md`, `progress.md`) updated to reflect current state.
--   **Next Step:** User to commit and push the workflow file to trigger the first deployment.
+    -   API development complete.
+    -   Azure infrastructure provisioned.
+    -   GitHub Actions workflow for CI/CD created and subsequently updated to correct ACR authentication.
+    -   Memory Bank (`activeContext.md`, `progress.md`) updated.
+-   **Next Step:** User to commit and push the updated workflow file to trigger deployment.
 
 ### 2.2. What Works / Completed (API Project)
 
@@ -62,18 +62,18 @@
     -   App Service: `concesur-vehicle-api`
     -   Service Principal: `GitHubActionsVehicleAPI` (with Contributor and AcrPush roles).
 -   **GitHub Secrets Configuration:** User confirmed all necessary secrets are added.
--   **GitHub Actions Workflow File:** `.github/workflows/deploy-to-azure.yml` created.
+-   **GitHub Actions Workflow File:** `.github/workflows/deploy-to-azure.yml` created and updated to use correct Service Principal credentials for ACR login.
 -   **Memory Bank Updates:** `activeContext.md` and `progress.md` updated.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
 
-1.  **User Action: Commit and Push Workflow:**
-    -   User to commit `.github/workflows/deploy-to-azure.yml` to their repository.
+1.  **User Action: Commit and Push Updated Workflow:**
+    -   User to commit changes to `.github/workflows/deploy-to-azure.yml` to their repository.
     -   User to push the commit to the `main` branch to trigger the GitHub Action.
 2.  **Monitor GitHub Action:**
     -   Observe the workflow run in the GitHub "Actions" tab.
-    -   Troubleshoot any issues that arise during the build or deployment steps.
+    -   Troubleshoot any further issues that arise.
 3.  **Deployment Verification & Testing:**
     -   Once the workflow succeeds, test the API at `https://concesur-vehicle-api.azurewebsites.net`.
     -   Check `/docs` for interactive API documentation.
@@ -84,7 +84,7 @@
 
 ### 2.4. Known Issues / Blockers (API Project)
 
--   **GitHub Actions Workflow Execution:** The first run of the workflow will be critical to catch any misconfigurations in secrets, paths, or Azure permissions not caught during CLI setup.
+-   **GitHub Actions Workflow Execution:** The next run of the workflow with the corrected ACR login will be important to monitor.
 -   **App Service Startup:** After deployment, the App Service needs to pull the Docker image and start the container. Logs in Azure App Service (Log stream) can help diagnose startup issues.
 
 ### 2.5. Evolution of Project Decisions (API Project)
