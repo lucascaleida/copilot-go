@@ -1,0 +1,76 @@
+name: Deploy Vehicle Search API to Azure App Service
+
+on:
+  push:
+    branches:
+      - main # Or your default branch
+    paths:
+      - 'vehicle_search_api/**' # Only run if changes are in the API directory
+
+env:
+  AZURE_APP_SERVICE_NAME: ${{ secrets.APP_SERVICE_NAME }}       # Name of the Azure App Service
+  AZURE_RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP_NAME }}    # Name of the Azure Resource Group
+  ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}           # ACR login server (e.g., youracrname.azurecr.io)
+  DOCKERFILE_PATH: ./vehicle_search_api/Dockerfile            # Path to your Dockerfile
+  IMAGE_NAME: vehicle-search-api                              # Name for your Docker image
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: ACR Login
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }} # For Service Principal, this is its clientId
+          password: ${{ secrets.ACR_PASSWORD }} # For Service Principal, this is its clientSecret
+        # Note: The azure/login action might configure docker to authenticate with ACR if the SP has AcrPush.
+        # If the above ACR login fails, it might be because azure/login already handled it,
+        # or we might need to adjust how ACR_USERNAME/PASSWORD are derived if not directly from AZURE_CREDENTIALS.
+        # Often, after azure/login, direct docker push to ACR works if SP has AcrPush.
+        # Let's try this first. If it fails, we can use `az acr login --name <acrname> --expose-token`
+
+      - name: Build and push Docker image
+        run: |
+          docker build --platform linux/amd64 -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }} -f ${{ env.DOCKERFILE_PATH }} ./vehicle_search_api
+          docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        # The context for docker build is ./vehicle_search_api because Dockerfile COPY commands are relative to that
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_APP_SERVICE_NAME }}
+          resource-group-name: ${{ env.AZURE_RESOURCE_GROUP }}
+          images: '${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}'
+          # slot-name: 'production' # Optional: if you use deployment slots
+
+      - name: Configure App Service Application Settings
+        run: |
+          az webapp config appsettings set --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --name ${{ env.AZURE_APP_SERVICE_NAME }} --settings \
+            "API_KEY=${{ secrets.API_KEY }}" \
+            "DB_HOST=${{ secrets.DB_HOST }}" \
+            "DB_PORT=${{ secrets.DB_PORT }}" \
+            "DB_USER=${{ secrets.DB_USER }}" \
+            "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
+            "DB_NAME=${{ secrets.DB_NAME }}" \
+            "DB_SSL_MODE=${{ secrets.DB_SSL_MODE }}" \
+            "WEBSITES_PORT=8000" \
+            "DOCKER_REGISTRY_SERVER_URL=https://${{ env.ACR_LOGIN_SERVER }}" \
+            "DOCKER_REGISTRY_SERVER_USERNAME=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" \
+            "DOCKER_REGISTRY_SERVER_PASSWORD=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}"
+
+      - name: Azure Logout
+        run: |
+          az logout
+          az cache purge
+          az account clear
+        if: always() # Ensure logout runs even if previous steps fail

@@ -1,20 +1,19 @@
 # Active Context: Database Synchronization Utility
 
-## 1. Current Work Focus (as of 2025-06-18 10:51)
+## 1. Current Work Focus (as of 2025-06-18 11:54)
 
--   **Phase:** Feature Enhancement - Vehicle Search API.
--   **Activity:** Implemented fallback logic for `_inv` fields in `vehicle_search_api/app/main.py`.
-    -   The API now prioritizes `marca_inv` and `modelo_inv` over `marca` and `modelo` respectively.
-    -   If `_inv` fields are null or empty, the API uses the standard fields.
--   **Previous Activity (as of 2025-06-04 17:47):**
-    -   Received request to build a FastAPI application with Docker to expose an endpoint for querying car data from Azure MySQL.
--   **Activity:**
-    -   Received request to build a FastAPI application with Docker to expose an endpoint for querying car data from Azure MySQL.
-    -   API key: `Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6` (to be stored in `.env`).
-    -   Identified `vehicles_stock` table schema by inspecting the local SQLite DB (`mysql_to_sqlite_sync/data/local_vehicles_stock.db`).
-    -   Key queryable fields identified: `marca`, `modelo`, `color`, `tipo_transmision`, `kms`, `pvp_api`, `fecha_matriculacion` (for year), `vin`.
-    -   Started updating Memory Bank files (`projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`) to reflect this new project component.
--   **Objective:** To create the FastAPI application, Dockerfile, `.env` file, and necessary supporting files for the vehicle search API.
+-   **Phase:** Deployment - Vehicle Search API.
+-   **Activity:** Created Azure resources and GitHub Actions workflow for CI/CD.
+-   **Azure Resources Created:**
+    -   Resource Group: `concesur-rg` (Location: `West Europe`, Subscription: `f081045d-15da-466d-b4a4-9ab4cb3065a8`)
+    -   Azure Container Registry (ACR): `concesurvehicleapicr` (Login Server: `concesurvehicleapicr.azurecr.io`)
+    -   App Service Plan: `concesurvehicleapiplan` (SKU: `B1`, Linux)
+    -   App Service: `concesur-vehicle-api` (Default Hostname: `concesur-vehicle-api.azurewebsites.net`)
+    -   Service Principal: `GitHubActionsVehicleAPI` (clientId: `1e65000e-9ff7-4aba-a483-7147a528fb9c`, objectId: `87db20fd-95ee-4d9d-a7f5-401df2729c25`) with `Contributor` on subscription and `AcrPush` on ACR.
+-   **GitHub Configuration:**
+    -   Secrets configured: `AZURE_CREDENTIALS`, `ACR_LOGIN_SERVER`, `APP_SERVICE_NAME`, `RESOURCE_GROUP_NAME`, `API_KEY`, `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_SSL_MODE`.
+    -   Workflow file created: `.github/workflows/deploy-to-azure.yml`.
+-   **Objective:** User to commit and push workflow file to trigger deployment. Monitor and verify deployment.
 
 ## 2. Recent Changes & Decisions
 
@@ -27,26 +26,29 @@
 
 ## 3. Next Steps (Immediate)
 
-1.  **Complete Memory Bank Update:**
-    -   Update `activeContext.md` (this file).
-    -   Update `progress.md` to reflect the start of the new API project and the status of the previous sync utility project.
-2.  **Create Project Directory:** Create a new directory for the FastAPI project (e.g., `vehicle_search_api/`).
-3.  **Create `.env` file:** Inside `vehicle_search_api/`, create `.env` with the provided API_KEY and placeholders for Azure DB credentials.
-4.  **Create `requirements.txt`:** For the FastAPI application.
-5.  **Develop FastAPI Application (`main.py`):**
-    -   Implement API key authentication.
-    -   Implement database connection logic for Azure MySQL (using credentials from env vars).
-    -   Create the `/cars/` endpoint with query parameters for make, model, year, color, etc.
-    -   Implement SQL query construction and execution.
-    -   Define Pydantic models for request and response.
-6.  **Create `Dockerfile`:** To containerize the FastAPI application.
-7.  **Create `docker-compose.yml` (Optional but Recommended):** For easier local development and running.
+1.  **Update Memory Bank:**
+    -   Update `activeContext.md` (this file) - Completed.
+    -   Update `progress.md` to reflect the deployment actions taken - In progress.
+2.  **User Action: Commit and Push Workflow:**
+    -   User to commit `.github/workflows/deploy-to-azure.yml` and push to `main`.
+3.  **Monitor GitHub Action:**
+    -   Observe the workflow run in the GitHub "Actions" tab.
+    -   Troubleshoot any issues that arise during the build or deployment steps.
+4.  **Verify Deployment:**
+    -   Once the workflow succeeds, test the API at `https://concesur-vehicle-api.azurewebsites.net`.
+    -   Check `/docs` for interactive API documentation.
+    -   Perform test queries using the API key.
+5.  **Finalize Documentation:**
+    -   Update `progress.md` upon successful deployment and verification.
 
 ## 4. Active Considerations & Questions
 
--   **Azure DB Credentials for API:** Will use the same credentials as in `mysql_to_sqlite_sync/config.ini` for `azure_mysql_db` (host, user, password, database name, ssl_mode). These will need to be set as environment variables for the Docker container.
--   **Specific query logic:** Keep the query simple as requested, focusing on direct matches for make, model, color, and potentially ranges for year/kms/price if straightforward.
--   **Error Handling in API:** Ensure robust error handling for DB connection issues, invalid API keys, and bad query parameters.
+-   **GitHub Actions Workflow:**
+    -   Monitor the first run for any potential issues, especially with ACR authentication or Docker build context.
+    -   Ensure the `Configure App Service Application Settings` step correctly applies all environment variables.
+-   **Deployed Application:**
+    -   Verify the API is responsive and connects to the database successfully.
+    -   Check API key authentication.
 
 ## 5. Important Patterns & Preferences (for new API)
 

@@ -38,46 +38,54 @@
 
 ---
 
-## Project 2: Vehicle Search API (New as of 2025-06-04 17:47, Updated 2025-06-18 10:51)
+## Project 2: Vehicle Search API (New as of 2025-06-04 17:47, Updated 2025-06-18 11:54)
 
 ### 2.1. Current Status
 
--   **Overall:** API development in progress. Core application structure (`main.py`) exists. Key feature for `_inv` field fallback implemented.
--   **Milestone:** Implemented fallback logic for `marca_inv`/`modelo_inv` in API responses. Memory Bank (`activeContext.md`, `progress.md`) updated to reflect this.
+-   **Overall:** Azure resources created, GitHub secrets configured by user, and GitHub Actions workflow file (`deploy-to-azure.yml`) generated.
+-   **Milestone:**
+    -   API development complete (including `_inv` field fallback).
+    -   Azure infrastructure (Resource Group, ACR, App Service Plan, App Service, Service Principal) provisioned.
+    -   GitHub Actions workflow for CI/CD created.
+    -   Memory Bank (`activeContext.md`, `progress.md`) updated to reflect current state.
+-   **Next Step:** User to commit and push the workflow file to trigger the first deployment.
 
 ### 2.2. What Works / Completed (API Project)
 
 -   **Project Definition:** Task to create FastAPI with Docker for querying Azure MySQL `vehicles_stock` table, secured by API key.
--   **Schema Identification:** `vehicles_stock` columns identified from local SQLite DB.
--   **Memory Bank Update (Initial):** `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`, `activeContext.md`, and this `progress.md` file were updated to include the API project.
--   **`_inv` Field Fallback Logic (2025-06-18):**
-    -   Modified `vehicle_search_api/app/main.py` to select `marca_inv` and `modelo_inv`.
-    -   Implemented logic to use `_inv` field values for `marca` and `modelo` in the API response if the `_inv` fields are not empty/null, otherwise using the standard fields.
--   **Memory Bank Update (Post-Feature):** `activeContext.md` and `progress.md` updated to reflect the `_inv` fallback implementation.
+-   **Schema Identification:** `vehicles_stock` columns identified.
+-   **`_inv` Field Fallback Logic:** Implemented in `vehicle_search_api/app/main.py`.
+-   **Azure Resource Creation:**
+    -   Resource Group: `concesur-rg`
+    -   ACR: `concesurvehicleapicr`
+    -   App Service Plan: `concesurvehicleapiplan`
+    -   App Service: `concesur-vehicle-api`
+    -   Service Principal: `GitHubActionsVehicleAPI` (with Contributor and AcrPush roles).
+-   **GitHub Secrets Configuration:** User confirmed all necessary secrets are added.
+-   **GitHub Actions Workflow File:** `.github/workflows/deploy-to-azure.yml` created.
+-   **Memory Bank Updates:** `activeContext.md` and `progress.md` updated.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
 
-1.  **Create Project Structure:**
-    -   New directory: `vehicle_search_api/`
-2.  **Develop API Application:**
-    -   `vehicle_search_api/.env` file (API key, DB credentials).
-    -   `vehicle_search_api/requirements.txt`.
-    -   `vehicle_search_api/app/main.py` (FastAPI app, endpoint, DB logic, auth).
-    -   Pydantic models for request/response.
-3.  **Dockerize:**
-    -   `vehicle_search_api/Dockerfile`.
-    -   `vehicle_search_api/docker-compose.yml` (optional, for local dev).
-4.  **Testing:**
-    -   Unit tests (optional, future).
-    -   Integration tests (API endpoint testing with live DB connection).
-5.  **Documentation:**
-    -   Ensure Memory Bank is fully up-to-date upon completion.
-    -   API usage documentation (e.g., in a README within `vehicle_search_api/`).
+1.  **User Action: Commit and Push Workflow:**
+    -   User to commit `.github/workflows/deploy-to-azure.yml` to their repository.
+    -   User to push the commit to the `main` branch to trigger the GitHub Action.
+2.  **Monitor GitHub Action:**
+    -   Observe the workflow run in the GitHub "Actions" tab.
+    -   Troubleshoot any issues that arise during the build or deployment steps.
+3.  **Deployment Verification & Testing:**
+    -   Once the workflow succeeds, test the API at `https://concesur-vehicle-api.azurewebsites.net`.
+    -   Check `/docs` for interactive API documentation.
+    -   Perform test queries using the API key.
+4.  **Documentation:**
+    -   Finalize Memory Bank updates upon successful deployment and verification.
+    -   Consider adding API usage details to `vehicle_search_api/README.md`.
 
 ### 2.4. Known Issues / Blockers (API Project)
 
--   None identified yet. Azure DB credentials will be needed for the `.env` file.
+-   **GitHub Actions Workflow Execution:** The first run of the workflow will be critical to catch any misconfigurations in secrets, paths, or Azure permissions not caught during CLI setup.
+-   **App Service Startup:** After deployment, the App Service needs to pull the Docker image and start the container. Logs in Azure App Service (Log stream) can help diagnose startup issues.
 
 ### 2.5. Evolution of Project Decisions (API Project)
 
@@ -85,3 +93,5 @@
 -   Decision to use API Key authentication.
 -   Decision to leverage existing `vehicles_stock` table and its schema (derived from local sync copy).
 -   Decision to organize API project in a new `vehicle_search_api/` directory.
+-   Decision to deploy to Azure App Service using Docker containers.
+-   Decision to implement CI/CD using GitHub Actions.
