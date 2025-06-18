@@ -7,7 +7,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
+
 load_dotenv(dotenv_path="../.env") # Adjusted path to .env
 
 API_KEY = os.getenv("API_KEY")
