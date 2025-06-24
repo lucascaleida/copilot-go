@@ -36,21 +36,19 @@
 3.  **Monitor GitHub Action:**
     -   Observe the workflow run in the GitHub "Actions" tab.
     -   Troubleshoot any issues that arise during the build or deployment steps.
-4.  **Verify Deployment:**
-    -   Once the workflow succeeds, test the API at `https://concesur-vehicle-api.azurewebsites.net`.
-    -   Check `/docs` for interactive API documentation.
-    -   Perform test queries using the API key.
+4.  **Verify Deployment & Document Success (as per user feedback 2025-06-18 14:15):**
+    -   User confirmed the API test `curl -X GET "https://concesur-vehicle-api.azurewebsites.net/cars/?color=rojo" -H "X-API-Key: Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6"` was successful.
+    -   The API is accessible at `https://concesur-vehicle-api.azurewebsites.net`.
+    -   Interactive API documentation available at `/docs`.
 5.  **Finalize Documentation:**
-    -   Update `progress.md` upon successful deployment and verification.
+    -   Update `progress.md` to reflect successful deployment and test.
 
 ## 4. Active Considerations & Questions
 
 -   **GitHub Actions Workflow:**
-    -   Monitor the first run for any potential issues, especially with ACR authentication or Docker build context.
-    -   Ensure the `Configure App Service Application Settings` step correctly applies all environment variables.
+    -   The workflow successfully deployed the application.
 -   **Deployed Application:**
-    -   Verify the API is responsive and connects to the database successfully.
-    -   Check API key authentication.
+    -   User confirmed API is responsive and test query was successful.
 
 ## 5. Important Patterns & Preferences (for new API)
 

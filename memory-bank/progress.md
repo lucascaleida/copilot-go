@@ -48,7 +48,7 @@
     -   Azure infrastructure provisioned.
     -   GitHub Actions workflow for CI/CD created and subsequently updated to correct ACR authentication.
     -   Memory Bank (`activeContext.md`, `progress.md`) updated.
--   **Next Step:** User to commit and push the updated workflow file to trigger deployment.
+-   **Next Step:** User to commit and push the updated workflow file to trigger deployment. **Update (2025-06-18 14:15):** User confirmed deployment and API test were successful.
 
 ### 2.2. What Works / Completed (API Project)
 
@@ -72,20 +72,18 @@
     -   User to commit changes to `.github/workflows/deploy-to-azure.yml` to their repository.
     -   User to push the commit to the `main` branch to trigger the GitHub Action.
 2.  **Monitor GitHub Action:**
-    -   Observe the workflow run in the GitHub "Actions" tab.
-    -   Troubleshoot any further issues that arise.
-3.  **Deployment Verification & Testing:**
-    -   Once the workflow succeeds, test the API at `https://concesur-vehicle-api.azurewebsites.net`.
-    -   Check `/docs` for interactive API documentation.
-    -   Perform test queries using the API key.
+    -   Observed the workflow run in the GitHub "Actions" tab.
+3.  **Deployment Verification & Testing (Completed as per user feedback 2025-06-18 14:15):**
+    -   API tested successfully at `https://concesur-vehicle-api.azurewebsites.net`.
+    -   Test query: `curl -X GET "https://concesur-vehicle-api.azurewebsites.net/cars/?color=rojo" -H "X-API-Key: Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6"` was successful.
+    -   Interactive API documentation available at `/docs`.
 4.  **Documentation:**
-    -   Finalize Memory Bank updates upon successful deployment and verification.
+    -   Memory Bank updates completed.
     -   Consider adding API usage details to `vehicle_search_api/README.md`.
 
 ### 2.4. Known Issues / Blockers (API Project)
 
--   **GitHub Actions Workflow Execution:** The next run of the workflow with the corrected ACR login will be important to monitor.
--   **App Service Startup:** After deployment, the App Service needs to pull the Docker image and start the container. Logs in Azure App Service (Log stream) can help diagnose startup issues.
+-   None. API deployment and testing confirmed successful by user.
 
 ### 2.5. Evolution of Project Decisions (API Project)
 

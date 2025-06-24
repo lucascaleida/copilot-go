@@ -163,7 +163,13 @@ async def search_cars(
                 modelo_inv = row_dict.get("modelo_inv")
                 if modelo_inv is not None and str(modelo_inv).strip() != "":
                     row_dict["modelo"] = modelo_inv
-                
+
+                # If 'modelo' is still null or empty, use 'descripcion' as a fallback.
+                # Based on documentation/vehicle_stock_schema.md, the column is 'descripcion'.
+                current_modelo = row_dict.get("modelo")
+                if not current_modelo or not str(current_modelo).strip():
+                    row_dict["modelo"] = row_dict.get("descripcion")
+
                 # Fallback logic for marca
                 marca_inv = row_dict.get("marca_inv")
                 if marca_inv is not None and str(marca_inv).strip() != "":

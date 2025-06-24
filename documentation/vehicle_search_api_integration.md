@@ -4,12 +4,12 @@ This document provides the necessary information to integrate with the Vehicle S
 
 ## 1. API Endpoint
 
-The primary endpoint for searching vehicles is:
+The Vehicle Search API provides a single endpoint for querying the vehicle stock database. This endpoint allows for flexible filtering based on various vehicle attributes.
 
 -   **Method:** `GET`
--   **URL:** `/cars/`
+-   **Production URL:** `https://concesur-vehicle-api.azurewebsites.net/cars/`
 
-The base URL of the API will depend on its deployment environment (e.g., `http://localhost:8000` if running locally via Docker, or a specific production URL).
+This is the live endpoint and should be used for all integrations.
 
 ## 2. Authentication
 
@@ -68,11 +68,13 @@ All fields are optional and will be `null` if not available for a specific vehic
 
 ### Example Request (using `curl`)
 
-Assuming the API is running at `http://localhost:8000` and your API key is `YOUR_SECRET_API_KEY`:
+Here is an example of how to query the API to search for vehicles of the make "mercedes" with a limit of 100 results.
 
 ```bash
-curl -X GET "http://localhost:8000/cars/?marca=Toyota&color=Red&limit=2" \
-     -H "X-API-Key: YOUR_SECRET_API_KEY"
+curl -X 'GET' \
+  'https://concesur-vehicle-api.azurewebsites.net/cars/?marca=mercedes&limit=100' \
+  -H 'accept: application/json' \
+  -H 'X-API-Key: Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6'
 ```
 
 ### Example Response
