@@ -114,10 +114,12 @@ async def search_cars(
     """
 
     if make:
-        conditions.append("marca LIKE :make")
+        # Search for the make in 'marca' and 'marca_inv' fields
+        conditions.append("(marca LIKE :make OR marca_inv LIKE :make)")
         query_params["make"] = f"%{make}%"
     if model:
-        conditions.append("modelo LIKE :model")
+        # Search for the model in 'modelo', 'descripcion', and 'modelo_inv' fields
+        conditions.append("(modelo LIKE :model OR descripcion LIKE :model OR modelo_inv LIKE :model)")
         query_params["model"] = f"%{model}%"
     if year:
         conditions.append("YEAR(fecha_matriculacion) = :year")
