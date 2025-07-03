@@ -85,6 +85,10 @@ class Vehicle(BaseModel):
     class Config:
         from_attributes = True # For Pydantic v2 compatibility
 
+class StockPayload(BaseModel):
+    campos: List[str]
+    datos: List[List[Any]]
+
 @app.get("/cars/", response_model=List[Vehicle], dependencies=[Security(get_api_key)])
 async def search_cars(
     make: Optional[str] = Query(None, alias="marca"),
@@ -189,6 +193,45 @@ async def search_cars(
         # Log the error e
         print(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+@app.post("/stock/", status_code=200, dependencies=[Security(get_api_key)])
+async def update_stock(payload: StockPayload):
+    if engine is None:
+        raise HTTPException(status_code=503, detail="Database service is unavailable.")
+
+    if not payload.datos:
+        return {"message": "No data provided to update. Stock remains unchanged."}
+
+    # Convert list of lists to list of dictionaries
+    try:
+        list_of_dicts = [dict(zip(payload.campos, row)) for row in payload.datos]
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error processing payload data: {e}")
+
+    # Begin a transaction
+    with engine.begin() as connection:
+        try:
+            # 1. Delete all existing data from the table
+            connection.execute(text("DELETE FROM vehicles_stock"))
+
+            # 2. Bulk insert the new data
+            if list_of_dicts:
+                # Get the table object from metadata (or define it)
+                from sqlalchemy import Table, MetaData
+                metadata = MetaData()
+                vehicles_stock_table = Table('vehicles_stock', metadata, autoload_with=engine)
+                
+                connection.execute(vehicles_stock_table.insert(), list_of_dicts)
+
+            return {"message": "Stock updated successfully", "records_added": len(list_of_dicts)}
+
+        except SQLAlchemyError as e:
+            # The 'with engine.begin()' context manager will automatically roll back the transaction on exception.
+            print(f"Database transaction error: {e}")
+            raise HTTPException(status_code=500, detail=f"Database transaction failed: {str(e)}")
+        except Exception as e:
+            print(f"An unexpected error occurred during stock update: {e}")
+            raise HTTPException(status_code=500, detail=f"An unexpected error occurred during stock update: {str(e)}")
 
 @app.get("/")
 async def root():

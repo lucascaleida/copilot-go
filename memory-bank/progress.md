@@ -64,6 +64,11 @@
 -   **GitHub Secrets Configuration:** User confirmed all necessary secrets are added.
 -   **GitHub Actions Workflow File:** `.github/workflows/deploy-to-azure.yml` created and updated to use correct Service Principal credentials for ACR login.
 -   **Memory Bank Updates:** `activeContext.md` and `progress.md` updated.
+-   **Stock Update Endpoint (2025-07-03):**
+    -   Added `POST /stock/` endpoint to `vehicle_search_api/app/main.py`.
+    -   Implemented "truncate-and-load" logic within a database transaction.
+    -   Secured the endpoint with API key authentication.
+    -   Created `StockPayload` Pydantic model for request validation.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
@@ -93,3 +98,4 @@
 -   Decision to organize API project in a new `vehicle_search_api/` directory.
 -   Decision to deploy to Azure App Service using Docker containers.
 -   Decision to implement CI/CD using GitHub Actions.
+-   **2025-07-03:** Decision to add a stock update endpoint (`/stock/`) to allow for full data refreshes. The "truncate-and-load" strategy was chosen for its simplicity and for ensuring the data is an exact snapshot of the source. The operation is performed within a transaction to guarantee data integrity.
