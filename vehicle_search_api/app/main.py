@@ -202,9 +202,16 @@ async def update_stock(payload: StockPayload):
     if not payload.datos:
         return {"message": "No data provided to update. Stock remains unchanged."}
 
+    # Pre-process the 'campos' field if it's a list of tuples
+    processed_campos = []
+    if payload.campos and isinstance(payload.campos[0], (list, tuple)):
+        processed_campos = [str(field[0]) for field in payload.campos]
+    else:
+        processed_campos = payload.campos
+
     # Convert list of lists to list of dictionaries
     try:
-        list_of_dicts = [dict(zip(payload.campos, row)) for row in payload.datos]
+        list_of_dicts = [dict(zip(processed_campos, row)) for row in payload.datos]
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing payload data: {e}")
 

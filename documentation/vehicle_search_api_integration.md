@@ -1,30 +1,39 @@
-# Vehicle Search API Integration Guide for LLM Tools
+# Vehicle Search API Integration Guide
 
-This document provides the necessary information to integrate with the Vehicle Search API, allowing LLM tools to query vehicle stock data.
+This document provides the necessary information to integrate with the Vehicle Search API, allowing external systems to query and manage vehicle stock data.
 
-## 1. API Endpoint
+## 1. API Endpoints
 
-The Vehicle Search API provides a single endpoint for querying the vehicle stock database. This endpoint allows for flexible filtering based on various vehicle attributes.
+The API provides two main endpoints: one for searching vehicles and one for updating the entire vehicle stock.
+
+### 1.1. Vehicle Search
 
 -   **Method:** `GET`
 -   **Production URL:** `https://concesur-vehicle-api.azurewebsites.net/cars/`
+-   **Description:** Allows for flexible filtering of the vehicle stock based on various attributes.
 
-This is the live endpoint and should be used for all integrations.
+### 1.2. Stock Update
+
+-   **Method:** `POST`
+-   **Production URL:** `https://concesur-vehicle-api.azurewebsites.net/stock/`
+-   **Description:** Replaces the entire vehicle stock with the data provided in the request payload. This is a "truncate-and-load" operation, ensuring the database is an exact snapshot of the provided data.
 
 ## 2. Authentication
 
-The API is secured using an API key.
+The API is secured using an API key. This key must be included in the header of all requests to both endpoints.
 
 -   **Authentication Method:** API Key
 -   **Header Name:** `X-API-Key`
--   **API Key Value:** The API key is configured in the API's environment. The LLM tool or its administrator will need to be provided with this key.
+-   **API Key Value:** The API key is configured in the API's environment. The client system will need to be provided with this key.
 
 **Example Header:**
 `X-API-Key: YOUR_PROVIDED_API_KEY`
 
 If the API key is missing or invalid, the API will respond with an HTTP `403 Forbidden` error.
 
-## 3. Request Query Parameters
+## 3. Search Endpoint (`GET /cars/`)
+
+### 3.1. Request Query Parameters
 
 The `/cars/` endpoint accepts the following optional query parameters to filter the vehicle search:
 
@@ -42,9 +51,7 @@ The `/cars/` endpoint accepts the following optional query parameters to filter 
 | `tipo_transmision` | `transmission`   | string    | Filter by transmission type. Case-insensitive, partial match (LIKE).        | `Automatic`      |
 | `limit`            | `limit`          | integer   | Maximum number of results to return. Default: 100. Min: 1, Max: 1000.       | `50`             |
 
-**Note on `marca` and `modelo`:** The API internally prioritizes `marca_inv` and `modelo_inv` fields from the database if they are available, falling back to the standard `marca` and `modelo` fields. The query parameters `marca` and `modelo` will search against the standard fields.
-
-## 4. Response Structure
+### 3.2. Response Structure (`GET /cars/`)
 
 The API returns a JSON array of vehicle objects. Each object in the array represents a vehicle and contains the following fields:
 
@@ -62,83 +69,83 @@ The API returns a JSON array of vehicle objects. Each object in the array repres
 | `pvp_api`             | float         | Retail price (Precio Venta Público) from the API-specific field.              |
 | `marca`               | string        | Vehicle make/brand. (Value might come from `marca_inv` if available).         |
 
-All fields are optional and will be `null` if not available for a specific vehicle.
+## 4. Stock Update Endpoint (`POST /stock/`)
+
+### 4.1. Request Body Structure
+
+The `/stock/` endpoint expects a JSON object in the request body with the following structure:
+
+```json
+{
+  "campos": ["field1", "field2", "field3", ...],
+  "datos": [
+    ["value1_row1", "value2_row1", "value3_row1", ...],
+    ["value1_row2", "value2_row2", "value3_row2", ...],
+    ...
+  ]
+}
+```
+
+-   `campos` (list of strings or list of lists/tuples): The names of the database columns. The order of names must correspond to the order of values in each sub-array of `datos`. The API is flexible and can accept a simple list of strings (e.g., `["vin", "marca"]`) or a more complex list of tuples/lists from a database schema description (e.g., `[["vin", "varchar"], ["marca", "varchar"]]`). The API will automatically extract the column name.
+-   `datos` (list of lists): Each inner list represents a single vehicle record, with values in the same order as the `campos` list.
+
+### 4.2. Response Structure (`POST /stock/`)
+
+-   **On Success (HTTP `200 OK`):**
+    ```json
+    {
+      "message": "Stock updated successfully",
+      "records_added": 550
+    }
+    ```
+-   **If `datos` is empty (HTTP `200 OK`):**
+    ```json
+    {
+      "message": "No data provided to update. Stock remains unchanged."
+    }
+    ```
+-   **On Failure (e.g., HTTP `500 Internal Server Error`):**
+    ```json
+    {
+      "detail": "Database transaction failed: [specific error message]"
+    }
+    ```
 
 ## 5. Example Usage
 
-### Example Request (using `curl`)
-
-Here is an example of how to query the API to search for vehicles of the make "mercedes" with a limit of 100 results.
+### Example Search Request (`curl`)
 
 ```bash
 curl -X 'GET' \
   'https://concesur-vehicle-api.azurewebsites.net/cars/?marca=mercedes&limit=100' \
   -H 'accept: application/json' \
-  -H 'X-API-Key: Q9iPw1UpAY5s8RKxZPZEwRMFVH6yqK9UzAHj3rvjqmDua9Fzf7UwumqGZTM5MA80loFSbdQFyrVoPgp9PuUKIjQrpjWurAz7kUXSNK47f6Api2ogfwwe5ZyU9TgiTiY6'
+  -H 'X-API-Key: YOUR_PROVIDED_API_KEY'
 ```
 
-### Example Response
+### Example Stock Update Request (`curl`)
 
-```json
-[
-  {
-    "ficha_id": 101,
-    "modelo": "Camry",
-    "descripcion": "Reliable family sedan",
-    "tipo_transmision": "Automatic",
-    "matricula": "1234ABC",
-    "vin": "VIN12345TOYOTACAMRY",
-    "fecha_matriculacion": "2022-05-15",
-    "kms": 25000.0,
-    "color": "Red",
-    "pvp_api": 28000.0,
-    "marca": "Toyota"
-  },
-  {
-    "ficha_id": 105,
-    "modelo": "RAV4",
-    "descripcion": "Compact SUV, red",
-    "tipo_transmision": "Automatic",
-    "matricula": "5678DEF",
-    "vin": "VIN67890TOYOTARAV4",
-    "fecha_matriculacion": "2023-01-20",
-    "kms": 15000.0,
-    "color": "Red",
-    "pvp_api": 32000.0,
-    "marca": "Toyota"
-  }
-]
+```bash
+curl -X 'POST' \
+  'https://concesur-vehicle-api.azurewebsites.net/stock/' \
+  -H 'accept: application/json' \
+  -H 'X-API-Key: YOUR_PROVIDED_API_KEY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "campos": ["vin", "marca", "modelo", "color", "kms", "pvp_api"],
+    "datos": [
+      ["VIN001", "Toyota", "Corolla", "Blue", 25000, 21000.00],
+      ["VIN002", "Honda", "Civic", "Red", 30000, 22000.00]
+    ]
+  }'
 ```
 
 ## 6. Error Handling
 
 The API uses standard HTTP status codes to indicate success or failure:
 
--   **`200 OK`**: The request was successful, and the response body contains the vehicle data (which might be an empty list if no vehicles match the criteria).
+-   **`200 OK`**: The request was successful.
+-   **`400 Bad Request`**: The request body for the stock update is malformed.
 -   **`403 Forbidden`**: Authentication failed (e.g., missing or invalid API key).
-    ```json
-    {
-      "detail": "Could not validate credentials"
-    }
-    ```
--   **`422 Unprocessable Entity`**: The request was well-formed, but contained invalid data for one or more parameters (e.g., `limit` outside allowed range). FastAPI provides detailed error messages.
--   **`500 Internal Server Error`**: An unexpected error occurred on the server (e.g., database query error).
-    ```json
-    {
-      "detail": "Database query error: [specific error message]"
-    }
-    ```
-    or
-    ```json
-    {
-      "detail": "An unexpected error occurred: [specific error message]"
-    }
-    ```
--   **`503 Service Unavailable`**: The database service is not available (e.g., connection issue at API startup).
-    ```json
-    {
-      "detail": "Database service is unavailable."
-    }
-    ```
-
-LLM tools should be prepared to handle these responses appropriately.
+-   **`422 Unprocessable Entity`**: The request was well-formed, but contained invalid data for one or more parameters (e.g., `limit` outside allowed range).
+-   **`500 Internal Server Error`**: An unexpected error occurred on the server (e.g., database query or transaction error).
+-   **`503 Service Unavailable`**: The database service is not available.
