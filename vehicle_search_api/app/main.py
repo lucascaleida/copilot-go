@@ -1,4 +1,5 @@
 import os
+import json
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Security, Query, Request
 from fastapi.security.api_key import APIKeyHeader
@@ -66,13 +67,16 @@ async def log_request_body(request: Request, call_next):
     if request.url.path == "/stock/" and request.method == "POST":
         # Read the body, which consumes the stream
         body = await request.body()
-        # Log the raw body for debugging
-        print("--- RAW STOCK PAYLOAD RECEIVED TO DEBUG ---")
+        # Log the raw body for debugging, limited to 10 records
+        print("--- RAW STOCK PAYLOAD RECEIVED TO DEBUG (first 10 records) ---")
         try:
-            print(body.decode())
-        except UnicodeDecodeError:
-            print("Could not decode body as UTF-8. Raw bytes:")
-            print(body)
+            data = json.loads(body.decode())
+            if 'datos' in data and isinstance(data['datos'], list):
+                data['datos'] = data['datos'][:10]
+            print(json.dumps(data, indent=2)) # Pretty print
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # If decoding or parsing fails, print the raw body
+            print(body.decode(errors='ignore'))
         print("----------------------------------")
 
         # The stream has been consumed, so we need to pass the body back
@@ -106,6 +110,8 @@ class Vehicle(BaseModel):
     color: Optional[str] = None
     pvp_api: Optional[float] = None
     marca: Optional[str] = None
+    tienda: Optional[str] = None
+    vo_vn: Optional[str] = None
     # Add other fields from the schema as needed for the response
 
     class Config:
@@ -127,6 +133,8 @@ async def search_cars(
     min_price: Optional[float] = Query(None, alias="min_price"),
     max_price: Optional[float] = Query(None, alias="max_price"),
     transmission: Optional[str] = Query(None, alias="tipo_transmision"),
+    tienda: Optional[str] = Query(None),
+    vo_vn: Optional[str] = Query(None, description="Filter for new ('NEW') or used ('VO') vehicles"),
     limit: int = Query(100, ge=1, le=1000) # Default limit for results, with validation
 ):
     if engine is None:
@@ -139,7 +147,7 @@ async def search_cars(
     SELECT ficha_id, modelo, descripcion, tipo_transmision, matricula, vin, 
            DATE_FORMAT(fecha_matriculacion, '%Y-%m-%d') as fecha_matriculacion, 
            kms, color, pvp_api, marca,
-           modelo_inv, marca_inv  -- Added _inv fields
+           modelo_inv, marca_inv, workflow_estado
     FROM vehicles_stock
     """
 
@@ -176,6 +184,13 @@ async def search_cars(
         conditions.append("tipo_transmision LIKE :transmission")
         query_params["transmission"] = f"%{transmission}%"
 
+    if tienda:
+        conditions.append("workflow_estado LIKE :tienda")
+        query_params["tienda"] = f"%{tienda}%"
+    if vo_vn:
+        conditions.append("workflow_estado LIKE :vo_vn")
+        query_params["vo_vn"] = f"%{vo_vn}%"
+
     if conditions:
         base_query += " WHERE " + " AND ".join(conditions)
     
@@ -206,6 +221,20 @@ async def search_cars(
                 marca_inv = row_dict.get("marca_inv")
                 if marca_inv is not None and str(marca_inv).strip() != "":
                     row_dict["marca"] = marca_inv
+                
+                # Parse tienda and vo_vn from workflow_estado
+                workflow_estado = row_dict.get("workflow_estado")
+                if workflow_estado and isinstance(workflow_estado, str):
+                    parts = workflow_estado.split()
+                    # Expected format: "Stock <TIENDA> <VO_VN>"
+                    if len(parts) >= 3:
+                        row_dict["tienda"] = parts[1]
+                        row_dict["vo_vn"] = parts[2]
+                    elif len(parts) == 2:
+                        if parts[1].upper() in ['NEW', 'VO']:
+                            row_dict["vo_vn"] = parts[1]
+                        else:
+                            row_dict["tienda"] = parts[1]
                 
                 processed_cars_list.append(row_dict)
             

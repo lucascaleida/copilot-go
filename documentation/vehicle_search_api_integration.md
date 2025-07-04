@@ -49,6 +49,8 @@ The `/cars/` endpoint accepts the following optional query parameters to filter 
 | `min_price`        | `min_price`      | float     | Minimum price (based on `pvp_api`).                                         | `15000`          |
 | `max_price`        | `max_price`      | float     | Maximum price (based on `pvp_api`).                                         | `25000`          |
 | `tipo_transmision` | `transmission`   | string    | Filter by transmission type. Case-insensitive, partial match (LIKE).        | `Automatic`      |
+| `tienda`           | `tienda`         | string    | Filter by store code (e.g., A1, M1). Case-insensitive, partial match (LIKE). | `A1`             |
+| `vo_vn`            | `vo_vn`          | string    | Filter by vehicle condition ('NEW' for new, 'VO' for used). Case-insensitive, partial match (LIKE). | `NEW`            |
 | `limit`            | `limit`          | integer   | Maximum number of results to return. Default: 100. Min: 1, Max: 1000.       | `50`             |
 
 ### 3.2. Response Structure (`GET /cars/`)
@@ -68,6 +70,8 @@ The API returns a JSON array of vehicle objects. Each object in the array repres
 | `color`               | string        | Vehicle color.                                                                |
 | `pvp_api`             | float         | Retail price (Precio Venta Público) from the API-specific field.              |
 | `marca`               | string        | Vehicle make/brand. (Value might come from `marca_inv` if available).         |
+| `tienda`              | string        | The store code, parsed from `workflow_estado`.                                |
+| `vo_vn`               | string        | The vehicle condition ('NEW' or 'VO'), parsed from `workflow_estado`.         |
 
 ## 4. Stock Update Endpoint (`POST /stock/`)
 
@@ -117,7 +121,7 @@ The `/stock/` endpoint expects a JSON object in the request body with the follow
 
 ```bash
 curl -X 'GET' \
-  'https://concesur-vehicle-api.azurewebsites.net/cars/?marca=mercedes&limit=100' \
+  'https://concesur-vehicle-api.azurewebsites.net/cars/?marca=mercedes&tienda=A1&vo_vn=NEW&limit=100' \
   -H 'accept: application/json' \
   -H 'X-API-Key: YOUR_PROVIDED_API_KEY'
 ```
