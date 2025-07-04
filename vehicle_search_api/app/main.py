@@ -86,7 +86,7 @@ class Vehicle(BaseModel):
         from_attributes = True # For Pydantic v2 compatibility
 
 class StockPayload(BaseModel):
-    campos: List[str]
+    campos: List[Any]  # Allow list of anything to handle complex input
     datos: List[List[Any]]
 
 @app.get("/cars/", response_model=List[Vehicle], dependencies=[Security(get_api_key)])
