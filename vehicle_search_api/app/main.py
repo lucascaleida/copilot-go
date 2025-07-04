@@ -1,6 +1,6 @@
 import os
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Security, Query
+from fastapi import FastAPI, HTTPException, Security, Query, Request
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text
@@ -59,6 +59,31 @@ except Exception as e:
 
 
 app = FastAPI(title="Vehicle Search API", version="1.0.0")
+
+@app.middleware("http")
+async def log_request_body(request: Request, call_next):
+    if request.url.path == "/stock/" and request.method == "POST":
+        # Read the body, which consumes the stream
+        body = await request.body()
+        # Log the raw body for debugging
+        print("--- RAW STOCK PAYLOAD RECEIVED ---")
+        try:
+            print(body.decode())
+        except UnicodeDecodeError:
+            print("Could not decode body as UTF-8. Raw bytes:")
+            print(body)
+        print("----------------------------------")
+
+        # The stream has been consumed, so we need to pass the body back
+        # to the actual endpoint by recreating the receive channel.
+        async def receive():
+            return {"type": "http.request", "body": body}
+        
+        # Create a new request object with the recreated receive channel
+        request = Request(request.scope, receive)
+
+    response = await call_next(request)
+    return response
 
 async def get_api_key(api_key_header: str = Security(api_key_header)):
     if api_key_header == API_KEY:
@@ -196,12 +221,6 @@ async def search_cars(
 
 @app.post("/stock/", status_code=200, dependencies=[Security(get_api_key)])
 async def update_stock(payload: StockPayload):
-    # Log the received payload to the console for debugging in Azure
-    print(f"Received stock update payload. Records: {len(payload.datos)}")
-    # For more detailed logging, you can print the full payload, but be mindful of log size.
-    # import json
-    # print(json.dumps(payload.dict(), indent=2, default=str))
-
     if engine is None:
         raise HTTPException(status_code=503, detail="Database service is unavailable.")
 
