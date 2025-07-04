@@ -196,6 +196,12 @@ async def search_cars(
 
 @app.post("/stock/", status_code=200, dependencies=[Security(get_api_key)])
 async def update_stock(payload: StockPayload):
+    # Log the received payload to the console for debugging in Azure
+    print(f"Received stock update payload. Records: {len(payload.datos)}")
+    # For more detailed logging, you can print the full payload, but be mindful of log size.
+    # import json
+    # print(json.dumps(payload.dict(), indent=2, default=str))
+
     if engine is None:
         raise HTTPException(status_code=503, detail="Database service is unavailable.")
 

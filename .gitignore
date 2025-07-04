@@ -1,0 +1,15 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environment
+vehicle_search_api/venv/
+
+# Environment variables
+.env
+
+# Local Database Files
+*.sqlite
+*.sqlite3
