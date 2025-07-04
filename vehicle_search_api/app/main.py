@@ -66,7 +66,7 @@ async def log_request_body(request: Request, call_next):
         # Read the body, which consumes the stream
         body = await request.body()
         # Log the raw body for debugging
-        print("--- RAW STOCK PAYLOAD RECEIVED ---")
+        print("--- RAW STOCK PAYLOAD RECEIVED TO DEBUG ---")
         try:
             print(body.decode())
         except UnicodeDecodeError:
