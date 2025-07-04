@@ -3,9 +3,10 @@ from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, HTTPException, Security, Query, Request
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Column, BigInteger, String, Float, DateTime
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
+from datetime import datetime
 
 
 load_dotenv(dotenv_path="../.env") # Adjusted path to .env
@@ -219,6 +220,49 @@ async def search_cars(
         print(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
+# Schema definition for type conversion
+VEHICLE_STOCK_SCHEMA = {
+    'ficha_id': BigInteger, 'workflow_nombre': String, 'workflow_id': BigInteger,
+    'workflow_estado': String, 'workflow_estado_id': BigInteger, 'workflow_subestado': String,
+    'workflow_subestado_id': BigInteger, 'modelo': String, 'origen_custom': String,
+    'descripcion': String, 'tipo_transmision': String, 'matricula': String, 'vin': String,
+    'fecha_matriculacion': DateTime, 'fecha_matriculacion_JAWA': DateTime,
+    'kms_vehiculo': Float, 'kms': Float, 'kms_manual': String, 'color': String,
+    'interior': String, 'color_interior': String, 'equipamiento': String,
+    'fiscalidad': Float, 'pvp': String, 'garantia': String, 'comercial': String,
+    'fecha_reserva': String, 'observaciones': String, 'color_registro': String,
+    'fiscalidad_GO': String, 'marca': String, 'color_api': String, 'interior_api': String,
+    'fiscalidad_api': Float, 'pvp_api': Float, 'precio_base_api': Float, 'origen': String,
+    'marca_inv': String, 'modelo_inv': String, 'version_inv': String,
+    'codigo_jato_inv': String, 'publicar_inv': String, 'fecha_publicado_inv': String,
+    'codigo_progresion': String, 'tipo_venta': String, 'clase_vehiculo': String,
+    'grossvalue': Float, 'ubicacion': String, 'fecha_factura_compra': String,
+    'vehicle_stock_id': String
+}
+
+def convert_value(value, target_type):
+    """Converts a string value to a specified SQLAlchemy type, handling errors."""
+    if value is None or value == '':
+        return None
+
+    try:
+        if target_type == BigInteger:
+            return int(float(str(value).replace(',', '.')))
+        elif target_type == Float:
+            return float(str(value).replace(',', '.'))
+        elif target_type == DateTime:
+            # Try to parse different date formats
+            for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+                try:
+                    return datetime.strptime(str(value), fmt)
+                except ValueError:
+                    continue
+            # If all formats fail, return None
+            return None
+        return str(value)
+    except (ValueError, TypeError):
+        return None
+
 @app.post("/stock/", status_code=200, dependencies=[Security(get_api_key)])
 async def update_stock(payload: StockPayload):
     if engine is None:
@@ -227,35 +271,17 @@ async def update_stock(payload: StockPayload):
     if not payload.datos:
         return {"message": "No data provided to update. Stock remains unchanged."}
 
-    # Pre-process the 'campos' field if it's a list of tuples
-    processed_campos = []
-    if payload.campos and isinstance(payload.campos[0], (list, tuple)):
-        processed_campos = [str(field[0]) for field in payload.campos]
-    else:
-        processed_campos = payload.campos
-
-    # Convert list of lists to list of dictionaries
-    try:
-        list_of_dicts = [dict(zip(processed_campos, row)) for row in payload.datos]
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error processing payload data: {e}")
-
-    # Sanitize data before insertion to prevent type errors
-    for record in list_of_dicts:
-        # Fields that should be numeric but might come in as empty strings
-        numeric_fields = ['kms', 'pvp_api', 'kms_vehiculo', 'pvp', 'precio_base_api', 'grossvalue']
-        for key in numeric_fields:
-            if key in record:
-                value = record.get(key)
-                if value in [None, '']:
-                    record[key] = None  # Set to None (NULL) if empty
-                else:
-                    try:
-                        # Convert to float, handling potential formatting
-                        record[key] = float(str(value).replace(',', '.'))
-                    except (ValueError, TypeError):
-                        # If conversion fails, set to None to avoid errors
-                        record[key] = None
+    processed_campos = [str(c) for c in payload.campos]
+    
+    list_of_dicts = []
+    for row in payload.datos:
+        record = {}
+        for i, field in enumerate(processed_campos):
+            if field in VEHICLE_STOCK_SCHEMA:
+                target_type = VEHICLE_STOCK_SCHEMA[field]
+                raw_value = row[i] if i < len(row) else None
+                record[field] = convert_value(raw_value, target_type)
+        list_of_dicts.append(record)
 
     # Begin a transaction
     with engine.begin() as connection:
