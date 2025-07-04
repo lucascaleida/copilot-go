@@ -240,6 +240,23 @@ async def update_stock(payload: StockPayload):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error processing payload data: {e}")
 
+    # Sanitize data before insertion to prevent type errors
+    for record in list_of_dicts:
+        # Fields that should be numeric but might come in as empty strings
+        numeric_fields = ['kms', 'pvp_api', 'kms_vehiculo', 'pvp', 'precio_base_api', 'grossvalue']
+        for key in numeric_fields:
+            if key in record:
+                value = record.get(key)
+                if value in [None, '']:
+                    record[key] = None  # Set to None (NULL) if empty
+                else:
+                    try:
+                        # Convert to float, handling potential formatting
+                        record[key] = float(str(value).replace(',', '.'))
+                    except (ValueError, TypeError):
+                        # If conversion fails, set to None to avoid errors
+                        record[key] = None
+
     # Begin a transaction
     with engine.begin() as connection:
         try:
