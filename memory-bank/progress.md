@@ -49,6 +49,7 @@
     -   GitHub Actions workflow for CI/CD created and subsequently updated to correct ACR authentication.
     -   Memory Bank (`activeContext.md`, `progress.md`) updated.
 -   **Next Step:** User to commit and push the updated workflow file to trigger deployment. **Update (2025-06-18 14:15):** User confirmed deployment and API test were successful.
+-   **Update (2025-07-04):** Enhanced `GET /cars/` endpoint with `tienda` and `vo_vn` filters. Improved logging for the `POST /stock/` endpoint and updated all relevant documentation.
 
 ### 2.2. What Works / Completed (API Project)
 
@@ -69,6 +70,11 @@
     -   Implemented "truncate-and-load" logic within a database transaction.
     -   Secured the endpoint with API key authentication.
     -   Created `StockPayload` Pydantic model for request validation.
+-   **Search and Logging Enhancements (2025-07-04):**
+    -   Added `tienda` and `vo_vn` search filters to the `/cars/` endpoint.
+    -   The API response now includes `tienda` and `vo_vn` data, parsed from the `workflow_estado` field.
+    -   Limited the `POST /stock/` payload log to the first 10 records.
+    -   Updated `vehicle_search_api_integration.md` documentation.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
@@ -99,3 +105,4 @@
 -   Decision to deploy to Azure App Service using Docker containers.
 -   Decision to implement CI/CD using GitHub Actions.
 -   **2025-07-03:** Decision to add a stock update endpoint (`/stock/`) to allow for full data refreshes. The "truncate-and-load" strategy was chosen for its simplicity and for ensuring the data is an exact snapshot of the source. The operation is performed within a transaction to guarantee data integrity.
+-   **2025-07-04:** Decision to enhance the search functionality by adding filters for store (`tienda`) and vehicle condition (`vo_vn`). This involved parsing the `workflow_estado` field to extract the necessary information.
