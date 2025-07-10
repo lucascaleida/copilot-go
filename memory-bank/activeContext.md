@@ -2,19 +2,22 @@
 
 ## 1. Current Work Focus (as of 2025-07-10)
 
--   **Phase:** Feature Enhancement - Excel Inventory Upload.
--   **Activity:** Added new endpoints for uploading Excel inventory data to server memory.
--   **Objective:** Allow users to upload Excel files containing vehicle inventory stock data that will be stored in server memory (not in database) for future search operations.
+-   **Phase:** Feature Enhancement - Excel Inventory Management Complete.
+-   **Activity:** Added complete inventory management system with upload and search capabilities.
+-   **Objective:** Allow users to upload Excel files containing vehicle inventory stock data and search through it using comprehensive filters - all stored in server memory (not database).
 
 ## 2. Recent Changes & Decisions
 
--   **New Excel Upload Endpoints:** Added two new endpoints for inventory management:
+-   **New Inventory Management Endpoints:** Added three new endpoints for complete inventory management:
     -   `POST /inventory/upload/` - Uploads Excel files with vehicle inventory data to server memory
     -   `GET /inventory/info/` - Returns information about currently loaded inventory data
+    -   `GET /inventory/search/` - Searches vehicles in memory-stored inventory with comprehensive filters
+-   **Comprehensive Search Filters:** Implemented search by Marca, Versión, Kms (range), Precio (range), Precio financiado (range), Matrícula, Carrocería, Combustible, Fecha de Matriculación (range), Color, Cambio, Tipo, Estado, and Tienda
 -   **Excel Processing:** Implemented pandas-based Excel file processing with support for .xlsx and .xls formats
 -   **Memory Storage:** Added global variables `inventory_data` and `inventory_upload_time` to store inventory data in server memory
 -   **Dependencies:** Added `pandas` and `openpyxl` to requirements.txt for Excel processing
--   **Enhanced Logging:** Excel upload endpoint logs first 3 records for debugging and provides detailed statistics
+-   **Enhanced Logging:** Excel upload endpoint logs first 3 records and inventory search logs filter usage and results count
+-   **Smart Data Handling:** Implemented proper numeric conversion for price fields (handling comma decimal separators) and flexible date parsing
 -   **Previous Search Filters:** Added `tienda` and `vo_vn` as optional query parameters to the `GET /cars/` endpoint
 -   **Response Enhancement:** The API response for a vehicle search includes `tienda` and `vo_vn` fields
 -   **Data Parsing:** Implemented logic to parse the `workflow_estado` field from the database to extract store and vehicle condition

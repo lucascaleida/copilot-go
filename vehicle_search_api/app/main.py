@@ -443,6 +443,166 @@ async def get_inventory_info():
         }
     }
 
+@app.get("/inventory/search/", dependencies=[Security(get_api_key)])
+async def search_inventory_vehicles(
+    marca: Optional[str] = Query(None, description="Filter by Marca (brand)"),
+    version: Optional[str] = Query(None, alias="Versión", description="Filter by Versión (version)"),
+    min_kms: Optional[float] = Query(None, description="Minimum Kms"),
+    max_kms: Optional[float] = Query(None, description="Maximum Kms"),
+    min_precio: Optional[float] = Query(None, description="Minimum Precio"),
+    max_precio: Optional[float] = Query(None, description="Maximum Precio"),
+    min_precio_financiado: Optional[float] = Query(None, description="Minimum Precio financiado"),
+    max_precio_financiado: Optional[float] = Query(None, description="Maximum Precio financiado"),
+    matricula: Optional[str] = Query(None, alias="Matrícula", description="Filter by Matrícula"),
+    carroceria: Optional[str] = Query(None, alias="Carrocería", description="Filter by Carrocería"),
+    combustible: Optional[str] = Query(None, description="Filter by Combustible"),
+    fecha_matriculacion_desde: Optional[str] = Query(None, description="Fecha de Matriculación from (MM/YYYY or YYYY)"),
+    fecha_matriculacion_hasta: Optional[str] = Query(None, description="Fecha de Matriculación to (MM/YYYY or YYYY)"),
+    color: Optional[str] = Query(None, description="Filter by Color"),
+    cambio: Optional[str] = Query(None, description="Filter by Cambio (transmission)"),
+    tipo: Optional[str] = Query(None, description="Filter by Tipo"),
+    estado: Optional[str] = Query(None, description="Filter by Estado"),
+    tienda: Optional[str] = Query(None, description="Filter by Tienda"),
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of results to return")
+):
+    """
+    Search vehicles in the uploaded inventory data stored in memory.
+    All filters are optional and can be combined.
+    """
+    global inventory_data
+    
+    if inventory_data is None or inventory_data.empty:
+        raise HTTPException(status_code=404, detail="No inventory data loaded. Please upload an Excel file first using /inventory/upload/")
+    
+    try:
+        # Start with all data
+        filtered_data = inventory_data.copy()
+        
+        # Apply filters
+        if marca:
+            filtered_data = filtered_data[filtered_data['Marca'].str.contains(marca, case=False, na=False)]
+        
+        if version:
+            filtered_data = filtered_data[filtered_data['Versión'].str.contains(version, case=False, na=False)]
+        
+        # Kms range filter
+        if min_kms is not None:
+            filtered_data = filtered_data[pd.to_numeric(filtered_data['Kms'], errors='coerce') >= min_kms]
+        if max_kms is not None:
+            filtered_data = filtered_data[pd.to_numeric(filtered_data['Kms'], errors='coerce') <= max_kms]
+        
+        # Precio range filter
+        if min_precio is not None:
+            # Convert price string to numeric (handle commas as decimal separators)
+            precio_numeric = pd.to_numeric(filtered_data['Precio'].astype(str).str.replace(',', '.'), errors='coerce')
+            filtered_data = filtered_data[precio_numeric >= min_precio]
+        if max_precio is not None:
+            precio_numeric = pd.to_numeric(filtered_data['Precio'].astype(str).str.replace(',', '.'), errors='coerce')
+            filtered_data = filtered_data[precio_numeric <= max_precio]
+        
+        # Precio financiado range filter
+        if min_precio_financiado is not None:
+            precio_fin_numeric = pd.to_numeric(filtered_data['Precio financiado'].astype(str).str.replace(',', '.'), errors='coerce')
+            filtered_data = filtered_data[precio_fin_numeric >= min_precio_financiado]
+        if max_precio_financiado is not None:
+            precio_fin_numeric = pd.to_numeric(filtered_data['Precio financiado'].astype(str).str.replace(',', '.'), errors='coerce')
+            filtered_data = filtered_data[precio_fin_numeric <= max_precio_financiado]
+        
+        if matricula:
+            filtered_data = filtered_data[filtered_data['Matrícula'].str.contains(matricula, case=False, na=False)]
+        
+        if carroceria:
+            filtered_data = filtered_data[filtered_data['Carroceria'].str.contains(carroceria, case=False, na=False)]
+        
+        if combustible:
+            filtered_data = filtered_data[filtered_data['Combustible'].str.contains(combustible, case=False, na=False)]
+        
+        # Fecha de Matriculación range filter
+        if fecha_matriculacion_desde or fecha_matriculacion_hasta:
+            # Convert the date column to datetime, handling different formats
+            fecha_col = pd.to_datetime(filtered_data['Fecha de Matriculación'], format='%m/%Y', errors='coerce')
+            # If that fails, try other common formats
+            if fecha_col.isna().all():
+                fecha_col = pd.to_datetime(filtered_data['Fecha de Matriculación'], errors='coerce')
+            
+            if fecha_matriculacion_desde:
+                try:
+                    if '/' in fecha_matriculacion_desde:
+                        fecha_desde = pd.to_datetime(fecha_matriculacion_desde, format='%m/%Y')
+                    else:
+                        fecha_desde = pd.to_datetime(f"01/01/{fecha_matriculacion_desde}", format='%d/%m/%Y')
+                    filtered_data = filtered_data[fecha_col >= fecha_desde]
+                except:
+                    pass  # Ignore invalid date format
+            
+            if fecha_matriculacion_hasta:
+                try:
+                    if '/' in fecha_matriculacion_hasta:
+                        fecha_hasta = pd.to_datetime(fecha_matriculacion_hasta, format='%m/%Y')
+                    else:
+                        fecha_hasta = pd.to_datetime(f"31/12/{fecha_matriculacion_hasta}", format='%d/%m/%Y')
+                    filtered_data = filtered_data[fecha_col <= fecha_hasta]
+                except:
+                    pass  # Ignore invalid date format
+        
+        if color:
+            filtered_data = filtered_data[filtered_data['Color'].str.contains(color, case=False, na=False)]
+        
+        if cambio:
+            filtered_data = filtered_data[filtered_data['Cambio'].str.contains(cambio, case=False, na=False)]
+        
+        if tipo:
+            filtered_data = filtered_data[filtered_data['Tipo'].str.contains(tipo, case=False, na=False)]
+        
+        if estado:
+            filtered_data = filtered_data[filtered_data['Estado'].str.contains(estado, case=False, na=False)]
+        
+        if tienda:
+            filtered_data = filtered_data[filtered_data['Tienda'].str.contains(tienda, case=False, na=False)]
+        
+        # Apply limit
+        filtered_data = filtered_data.head(limit)
+        
+        # Convert to list of dictionaries for JSON response
+        results = filtered_data.fillna('').to_dict('records')
+        
+        # Log the search operation
+        print(f"--- INVENTORY SEARCH PERFORMED ---")
+        print(f"Search filters applied: marca={marca}, version={version}, min_kms={min_kms}, max_kms={max_kms}")
+        print(f"Results found: {len(results)} out of {len(inventory_data)} total records")
+        print("----------------------------------")
+        
+        return {
+            "message": "Inventory search completed",
+            "total_found": len(results),
+            "total_inventory_records": len(inventory_data),
+            "search_filters": {
+                "marca": marca,
+                "version": version,
+                "min_kms": min_kms,
+                "max_kms": max_kms,
+                "min_precio": min_precio,
+                "max_precio": max_precio,
+                "min_precio_financiado": min_precio_financiado,
+                "max_precio_financiado": max_precio_financiado,
+                "matricula": matricula,
+                "carroceria": carroceria,
+                "combustible": combustible,
+                "fecha_matriculacion_desde": fecha_matriculacion_desde,
+                "fecha_matriculacion_hasta": fecha_matriculacion_hasta,
+                "color": color,
+                "cambio": cambio,
+                "tipo": tipo,
+                "estado": estado,
+                "tienda": tienda
+            },
+            "results": results
+        }
+        
+    except Exception as e:
+        print(f"Error searching inventory data: {e}")
+        raise HTTPException(status_code=500, detail=f"Error searching inventory data: {str(e)}")
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to the Vehicle Search API. Access car data at /cars/ endpoint."}
