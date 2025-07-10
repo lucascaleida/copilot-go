@@ -76,14 +76,17 @@
     -   The API response now includes `tienda` and `vo_vn` data, parsed from the `workflow_estado` field.
     -   Limited the `POST /stock/` payload log to the first 10 records.
     -   Updated `vehicle_search_api_integration.md` documentation.
--   **Excel Inventory Upload (2025-07-10):**
+-   **Excel Inventory Management (2025-07-10):**
     -   Added `POST /inventory/upload/` endpoint for uploading Excel files with vehicle inventory data.
     -   Added `GET /inventory/info/` endpoint to retrieve information about loaded inventory data.
+    -   Added `GET /inventory/search/` endpoint for comprehensive vehicle searching in memory-stored inventory.
     -   Implemented pandas-based Excel processing supporting .xlsx and .xls formats.
     -   Created global memory storage for inventory data using `inventory_data` and `inventory_upload_time` variables.
     -   Added comprehensive logging for uploaded data (first 3 records) and detailed statistics.
     -   Updated `requirements.txt` with pandas and openpyxl dependencies.
     -   Excel processing handles expected headers: Adid, Marca, Modelo, Versión, Kms, Precio, etc.
+    -   Implemented comprehensive search filters: Marca, Versión, Kms (range), Precio (range), Precio financiado (range), Matrícula, Carrocería, Combustible, Fecha de Matriculación (range), Color, Cambio, Tipo, Estado, and Tienda.
+    -   Smart data handling with proper numeric conversion for price fields and flexible date parsing.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
