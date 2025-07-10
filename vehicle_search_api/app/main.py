@@ -1,13 +1,15 @@
 import os
 import json
 from typing import List, Optional, Dict, Any
-from fastapi import FastAPI, HTTPException, Security, Query, Request
+from fastapi import FastAPI, HTTPException, Security, Query, Request, UploadFile, File
 from fastapi.security.api_key import APIKeyHeader
 from pydantic import BaseModel
 from sqlalchemy import create_engine, text, Column, BigInteger, String, Float, DateTime
 from sqlalchemy.exc import SQLAlchemyError
 from dotenv import load_dotenv
 from datetime import datetime
+import pandas as pd
+import io
 
 
 load_dotenv(dotenv_path="../.env") # Adjusted path to .env
@@ -61,6 +63,10 @@ except Exception as e:
 
 
 app = FastAPI(title="Vehicle Search API", version="1.0.0")
+
+# Global variable to store inventory data in memory
+inventory_data: Optional[pd.DataFrame] = None
+inventory_upload_time: Optional[datetime] = None
 
 @app.middleware("http")
 async def log_request_body(request: Request, call_next):
@@ -336,6 +342,106 @@ async def update_stock(payload: StockPayload):
         except Exception as e:
             print(f"An unexpected error occurred during stock update: {e}")
             raise HTTPException(status_code=500, detail=f"An unexpected error occurred during stock update: {str(e)}")
+
+@app.post("/inventory/upload/", status_code=200, dependencies=[Security(get_api_key)])
+async def upload_inventory_excel(file: UploadFile = File(...)):
+    """
+    Upload Excel inventory stock data to be stored in server memory.
+    Expected Excel headers: Adid, Marca, Modelo, Versión, Kms, Precio, Precio anterior, 
+    Cuota Mensual Financiación, Precio financiado, Precio profesional, 
+    Marketplace Profesionales, Matrícula, Bastidor, Carroceria, Puertas, Combustible, 
+    Distintivo Ambiental, Fecha de Matriculación, Potencia, Color, Asientos, Marchas, 
+    Cambio, Cilindrada, TARA, Alto, Ancho, Largo, Vol. Maletero, Depósito, Cilindros, 
+    Aceleracion, Velocidad Max, Marchas, Asientos, Puertas, Consumo Medio, 
+    Consumo Ciudad, Consumo Carretera, Emisiones, Tipo, Estado, Origen, 
+    Fecha Creación, Fecha Edición, Fecha Multidifusión, Enriquecimiento, Fotos, 
+    Material interior, Tienda, Comentarios Internos, Disponibilidad, Destacado web, 
+    Garantía, Más Información
+    """
+    global inventory_data, inventory_upload_time
+    
+    # Validate file type
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx or .xls)")
+    
+    try:
+        # Read the file content
+        content = await file.read()
+        
+        # Create a BytesIO object from the content
+        excel_file = io.BytesIO(content)
+        
+        # Read Excel file using pandas
+        df = pd.read_excel(excel_file, engine='openpyxl' if file.filename.endswith('.xlsx') else 'xlrd')
+        
+        # Log the first few rows for debugging (first 3 records)
+        print("--- EXCEL INVENTORY DATA UPLOADED (first 3 records) ---")
+        print(f"Total rows: {len(df)}")
+        print(f"Columns: {list(df.columns)}")
+        if len(df) > 0:
+            print("Sample data:")
+            print(df.head(3).to_string())
+        print("----------------------------------")
+        
+        # Store data in global variable
+        inventory_data = df
+        inventory_upload_time = datetime.now()
+        
+        # Prepare response with statistics
+        column_count = len(df.columns)
+        row_count = len(df)
+        
+        # Get basic statistics about the data
+        marca_counts = df['Marca'].value_counts().head(5).to_dict() if 'Marca' in df.columns else {}
+        modelo_counts = df['Modelo'].value_counts().head(5).to_dict() if 'Modelo' in df.columns else {}
+        
+        response = {
+            "message": "Inventory Excel file uploaded successfully",
+            "upload_time": inventory_upload_time.isoformat(),
+            "statistics": {
+                "total_records": row_count,
+                "total_columns": column_count,
+                "columns": list(df.columns),
+                "top_brands": marca_counts,
+                "top_models": modelo_counts
+            }
+        }
+        
+        return response
+        
+    except Exception as e:
+        print(f"Error processing Excel file: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing Excel file: {str(e)}")
+
+@app.get("/inventory/info/", dependencies=[Security(get_api_key)])
+async def get_inventory_info():
+    """Get information about the currently loaded inventory data."""
+    global inventory_data, inventory_upload_time
+    
+    if inventory_data is None:
+        return {
+            "message": "No inventory data loaded",
+            "data_loaded": False,
+            "upload_time": None,
+            "statistics": None
+        }
+    
+    # Get statistics about current data
+    marca_counts = inventory_data['Marca'].value_counts().head(10).to_dict() if 'Marca' in inventory_data.columns else {}
+    modelo_counts = inventory_data['Modelo'].value_counts().head(10).to_dict() if 'Modelo' in inventory_data.columns else {}
+    
+    return {
+        "message": "Inventory data is loaded",
+        "data_loaded": True,
+        "upload_time": inventory_upload_time.isoformat() if inventory_upload_time else None,
+        "statistics": {
+            "total_records": len(inventory_data),
+            "total_columns": len(inventory_data.columns),
+            "columns": list(inventory_data.columns),
+            "top_brands": marca_counts,
+            "top_models": modelo_counts
+        }
+    }
 
 @app.get("/")
 async def root():

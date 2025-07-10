@@ -1,31 +1,39 @@
 # Active Context: Vehicle Search API
 
-## 1. Current Work Focus (as of 2025-07-04)
+## 1. Current Work Focus (as of 2025-07-10)
 
--   **Phase:** Feature Enhancement - Vehicle Search API.
--   **Activity:** Enhancing the `GET /cars/` endpoint with new search capabilities and improving logging.
--   **Objective:** Allow users to filter vehicles by store (`tienda`) and condition (`vo_vn`), and to provide this information in the response. Also, to limit verbose logging.
+-   **Phase:** Feature Enhancement - Excel Inventory Upload.
+-   **Activity:** Added new endpoints for uploading Excel inventory data to server memory.
+-   **Objective:** Allow users to upload Excel files containing vehicle inventory stock data that will be stored in server memory (not in database) for future search operations.
 
 ## 2. Recent Changes & Decisions
 
--   **New Search Filters:** Added `tienda` and `vo_vn` as optional query parameters to the `GET /cars/` endpoint.
--   **Response Enhancement:** The API response for a vehicle search now includes `tienda` and `vo_vn` fields.
--   **Data Parsing:** Implemented logic to parse the `workflow_estado` field from the database to extract the store and vehicle condition.
--   **Logging Improvement:** The raw payload logging for the `POST /stock/` endpoint is now limited to the first 10 records to avoid overly verbose logs.
--   **Documentation:** Updated the `vehicle_search_api_integration.md` guide to reflect the new search parameters and response fields.
+-   **New Excel Upload Endpoints:** Added two new endpoints for inventory management:
+    -   `POST /inventory/upload/` - Uploads Excel files with vehicle inventory data to server memory
+    -   `GET /inventory/info/` - Returns information about currently loaded inventory data
+-   **Excel Processing:** Implemented pandas-based Excel file processing with support for .xlsx and .xls formats
+-   **Memory Storage:** Added global variables `inventory_data` and `inventory_upload_time` to store inventory data in server memory
+-   **Dependencies:** Added `pandas` and `openpyxl` to requirements.txt for Excel processing
+-   **Enhanced Logging:** Excel upload endpoint logs first 3 records for debugging and provides detailed statistics
+-   **Previous Search Filters:** Added `tienda` and `vo_vn` as optional query parameters to the `GET /cars/` endpoint
+-   **Response Enhancement:** The API response for a vehicle search includes `tienda` and `vo_vn` fields
+-   **Data Parsing:** Implemented logic to parse the `workflow_estado` field from the database to extract store and vehicle condition
 
 ## 3. Next Steps (Immediate)
 
-1.  **Update Memory Bank:**
-    -   Update `activeContext.md` (this file) - **Completed**.
-    -   Update `progress.md` to reflect the new search features.
-2.  **Deployment:** The changes will need to be committed and pushed to trigger the GitHub Actions workflow for deployment.
-3.  **Testing:** After deployment, the new search filters (`tienda`, `vo_vn`) need to be thoroughly tested.
+1.  **Future Search Endpoints:** User mentioned they will request specific endpoints to search vehicles from the memory-stored inventory data
+2.  **Deployment:** The changes will need to be committed and pushed to trigger the GitHub Actions workflow for deployment
+3.  **Testing:** After deployment, test the new Excel upload endpoints:
+    -   `POST /inventory/upload/` with sample Excel file
+    -   `GET /inventory/info/` to verify data loading
 
 ## 4. Active Considerations & Questions
 
--   **`workflow_estado` Parsing:** The logic to extract `tienda` and `vo_vn` assumes a specific space-delimited format (`Stock <TIENDA> <VO_VN>`). This is a potential point of failure if the source data format changes. This dependency should be noted.
--   **Schema Consistency:** The success of the stock update endpoint still relies on the `campos` in the payload matching the column names in the `vehicles_stock` table.
+-   **Memory vs Database:** The new inventory data is stored in server memory (not database) as requested. This data will be lost on server restart.
+-   **Excel Schema Flexibility:** The upload endpoint accepts any Excel format but expects the headers provided by the user (Adid, Marca, Modelo, etc.)
+-   **Future Search Implementation:** Will need to implement search endpoints that query the in-memory DataFrame instead of the database
+-   **`workflow_estado` Parsing:** The logic to extract `tienda` and `vo_vn` assumes a specific space-delimited format (`Stock <TIENDA> <VO_VN>`)
+-   **Schema Consistency:** The success of the stock update endpoint still relies on the `campos` in the payload matching the column names in the `vehicles_stock` table
 
 ## 5. Important Patterns & Preferences (Reinforced)
 

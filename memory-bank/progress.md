@@ -50,6 +50,7 @@
     -   Memory Bank (`activeContext.md`, `progress.md`) updated.
 -   **Next Step:** User to commit and push the updated workflow file to trigger deployment. **Update (2025-06-18 14:15):** User confirmed deployment and API test were successful.
 -   **Update (2025-07-04):** Enhanced `GET /cars/` endpoint with `tienda` and `vo_vn` filters. Improved logging for the `POST /stock/` endpoint and updated all relevant documentation.
+-   **Update (2025-07-10):** Added Excel inventory upload functionality with new endpoints for uploading and managing inventory data in server memory.
 
 ### 2.2. What Works / Completed (API Project)
 
@@ -75,6 +76,14 @@
     -   The API response now includes `tienda` and `vo_vn` data, parsed from the `workflow_estado` field.
     -   Limited the `POST /stock/` payload log to the first 10 records.
     -   Updated `vehicle_search_api_integration.md` documentation.
+-   **Excel Inventory Upload (2025-07-10):**
+    -   Added `POST /inventory/upload/` endpoint for uploading Excel files with vehicle inventory data.
+    -   Added `GET /inventory/info/` endpoint to retrieve information about loaded inventory data.
+    -   Implemented pandas-based Excel processing supporting .xlsx and .xls formats.
+    -   Created global memory storage for inventory data using `inventory_data` and `inventory_upload_time` variables.
+    -   Added comprehensive logging for uploaded data (first 3 records) and detailed statistics.
+    -   Updated `requirements.txt` with pandas and openpyxl dependencies.
+    -   Excel processing handles expected headers: Adid, Marca, Modelo, Versión, Kms, Precio, etc.
 
 
 ### 2.3. What's Left to Build / To Do (API Project - High-Level)
@@ -106,3 +115,4 @@
 -   Decision to implement CI/CD using GitHub Actions.
 -   **2025-07-03:** Decision to add a stock update endpoint (`/stock/`) to allow for full data refreshes. The "truncate-and-load" strategy was chosen for its simplicity and for ensuring the data is an exact snapshot of the source. The operation is performed within a transaction to guarantee data integrity.
 -   **2025-07-04:** Decision to enhance the search functionality by adding filters for store (`tienda`) and vehicle condition (`vo_vn`). This involved parsing the `workflow_estado` field to extract the necessary information.
+-   **2025-07-10:** Decision to implement Excel inventory upload with in-memory storage rather than database storage. This allows for quick uploads and separate inventory management while keeping the main database structure intact. The data will be lost on server restart, which meets the user's requirement for temporary inventory storage.

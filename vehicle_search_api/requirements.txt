@@ -7,3 +7,5 @@ pydantic
 pytest
 requests
 pytest-mock
+pandas
+openpyxl
