@@ -446,15 +446,15 @@ async def get_inventory_info():
 @app.get("/inventory/search/", dependencies=[Security(get_api_key)])
 async def search_inventory_vehicles(
     marca: Optional[str] = Query(None, description="Filter by Marca (brand)"),
-    version: Optional[str] = Query(None, alias="Versión", description="Filter by Versión (version)"),
+    version: Optional[str] = Query(None, alias="version", description="Filter by Versión (version)"),
     min_kms: Optional[float] = Query(None, description="Minimum Kms"),
     max_kms: Optional[float] = Query(None, description="Maximum Kms"),
     min_precio: Optional[float] = Query(None, description="Minimum Precio"),
     max_precio: Optional[float] = Query(None, description="Maximum Precio"),
     min_precio_financiado: Optional[float] = Query(None, description="Minimum Precio financiado"),
     max_precio_financiado: Optional[float] = Query(None, description="Maximum Precio financiado"),
-    matricula: Optional[str] = Query(None, alias="Matrícula", description="Filter by Matrícula"),
-    carroceria: Optional[str] = Query(None, alias="Carrocería", description="Filter by Carrocería"),
+    matricula: Optional[str] = Query(None, alias="matricula", description="Filter by Matrícula"),
+    carroceria: Optional[str] = Query(None, alias="carroceria", description="Filter by Carrocería"),
     combustible: Optional[str] = Query(None, description="Filter by Combustible"),
     fecha_matriculacion_desde: Optional[str] = Query(None, description="Fecha de Matriculación from (MM/YYYY or YYYY)"),
     fecha_matriculacion_hasta: Optional[str] = Query(None, description="Fecha de Matriculación to (MM/YYYY or YYYY)"),
