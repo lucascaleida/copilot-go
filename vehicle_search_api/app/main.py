@@ -563,8 +563,18 @@ async def search_inventory_vehicles(
         # Apply limit
         filtered_data = filtered_data.head(limit)
         
+        # Define essential columns for a concise response
+        essential_columns = [
+            'Adid', 'Marca', 'Modelo', 'Versión', 'Kms', 'Precio', 'Matrícula',
+            'Precio financiado', 'Combustible', 'Cambio', 'Color', 'Tienda',
+            'Fecha de Matriculación', 'Potencia', 'Garantía'
+        ]
+        
+        # Filter existing columns to prevent errors if a column is missing
+        existing_essential_columns = [col for col in essential_columns if col in filtered_data.columns]
+        
         # Convert to list of dictionaries for JSON response
-        results = filtered_data.fillna('').to_dict('records')
+        results = filtered_data[existing_essential_columns].fillna('').to_dict('records')
         
         # Log the search operation
         print(f"--- INVENTORY SEARCH PERFORMED ---")
