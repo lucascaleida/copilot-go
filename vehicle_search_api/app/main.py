@@ -558,7 +558,8 @@ async def search_inventory_vehicles(
             filtered_data = filtered_data[filtered_data['Estado'].str.contains(estado, case=False, na=False)]
         
         if tienda:
-            filtered_data = filtered_data[filtered_data['Tienda'].str.contains(tienda, case=False, na=False)]
+            # Exact match, case-insensitive
+            filtered_data = filtered_data[filtered_data['Tienda'].str.lower() == tienda.lower()]
         
         # Apply limit
         filtered_data = filtered_data.head(limit)
